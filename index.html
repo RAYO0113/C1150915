@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>瑞媛的國文教學 · 部定必修古文投影</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
 <style>
 
 /* ================================================================
@@ -2809,8 +2810,15 @@ body.dark-mode .tp-panel { background: var(--mk-paper-warm,#221d18); }
 .tp-lb-r.on, .tp-lb-r:hover { background: var(--L-rhet,#c0392b); color:#fff; }
 .tp-lb-m { color: var(--L-mean,#2d7a4f); border-color: var(--L-mean,#2d7a4f); }
 .tp-lb-m.on, .tp-lb-m:hover { background: var(--L-mean,#2d7a4f); color:#fff; }
+/* 文章筆法（例如開門見山）獨立於修辭 */
+.tp-lb-s { color:var(--mk-gold,#b0892b); border-color:var(--mk-gold,#b0892b); }
+.tp-lb-s.on, .tp-lb-s:hover { background:var(--mk-gold,#b0892b); color:#fff; }
 .tp-box { display:none; }
 .tp-box.show { display:block; }
+.tp-style { font-family:"Noto Sans TC",sans-serif; font-size:calc(var(--base-size)*1.0); line-height:1.85; padding:7px 13px; margin-top:5px;
+  border-left:3px solid var(--mk-gold,#b0892b); background:rgba(176,137,43,.10); border-radius:2px; }
+.tp-stk { display:inline-block; background:var(--mk-gold,#b0892b); color:#fff; font-family:"Noto Serif TC",serif;
+  font-size:.78em; padding:1px 9px; border-radius:2px; margin-right:8px; }
 /* 句意引用的原句：課文中綠色粗底線；開啟時整句變綠 */
 .tp-cite { border-bottom:3px solid var(--L-mean,#2d7a4f); padding-bottom:1px; transition:color 0.3s; }
 .tp-cite.lit { color: var(--L-mean,#2d7a4f); font-weight:700; }
@@ -3485,18 +3493,28 @@ body.dark-mode .wks-charbian { background: var(--mk-paper,#1c1917) !important; }
   color: var(--L-supp,#7c4da0); letter-spacing:0; }
 .tp-p.show .tp-pd { display:inline; }
 /* 課文注音（ruby） */
-/* 課文注音：改為藍色可點「註」，不再以 ruby 小字浮在字上方 */
-.tp-zwrap { display:inline; white-space:normal; }
-.tp-zword { font-family:"Noto Serif TC","Zen Old Mincho",serif; }
-.tp-zbtn {
-  display:inline-flex; align-items:center; justify-content:center;
-  margin-left:0.16em; padding:0 0.22em; border:0; border-bottom:1px dashed var(--L-gloss,#1f6fb2);
-  background:transparent; color:var(--L-gloss,#1f6fb2); font:inherit; font-size:0.72em;
-  line-height:1.1; cursor:pointer; vertical-align:baseline; font-weight:700;
+/* 課文注音／通假：直接點字本身，開啟後以較小的芫荽體取代原字，不加括號 */
+.tp-zwrap { display:inline-flex; align-items:baseline; white-space:normal; vertical-align:baseline; }
+.tp-zswap {
+  display:inline-flex; align-items:baseline; justify-content:center;
+  border:0; border-radius:3px; padding:0 0.12em; margin:0;
+  background:var(--L-gloss,#1f6fb2); color:#fff;
+  font:inherit; line-height:1.05; cursor:pointer; vertical-align:baseline;
+  -webkit-tap-highlight-color:rgba(31,111,178,.22); touch-action:manipulation;
 }
-.tp-zbtn:hover, .tp-zbtn.on { color:#fff; background:var(--L-gloss,#1f6fb2); border-radius:3px; }
-.tp-zd { display:none; color:var(--L-gloss,#1f6fb2); font-size:0.82em; font-family:"Noto Sans TC",sans-serif; margin-left:0.08em; }
-.tp-zwrap.show .tp-zd { display:inline; }
+.tp-zbase { font-family:"Noto Serif TC","Zen Old Mincho",serif; font-weight:500; }
+.tp-zann {
+  display:none; color:var(--L-gloss,#1f6fb2);
+  font-family:"Iansui","Noto Sans TC",sans-serif;
+  font-size:0.78em; font-weight:400; letter-spacing:0.02em; line-height:1.15;
+  white-space:nowrap;
+}
+.tp-zwrap.show .tp-zswap { background:transparent; color:var(--L-gloss,#1f6fb2); border-bottom:1px solid var(--L-gloss,#1f6fb2); padding:0; }
+.tp-zwrap.show .tp-zbase { display:none; }
+.tp-zwrap.show .tp-zann { display:inline; }
+/* 課文右側注釋與點開字義統一採較有手寫感的芫荽體 */
+.tp-note, .tp-gd, .tp-pd, .tp-src { font-family:"Iansui","Noto Sans TC",sans-serif; }
+.tp-note { font-size:0.98em; }
 
 /* ════ 錯綜·交錯語次動畫 ════ */
 .cuo-box { padding:18px 16px; border-radius:5px; background:var(--mk-paper-warm,#f7f2e6);
@@ -5667,7 +5685,7 @@ function tpTog(el) {
 }
 function tpShow(btn, k) {
   const line = btn.closest('.tp-line');
-  const box = line.querySelector(k === 'r' ? '.tp-box-r' : (k === 't' ? '.tp-box-t' : (k === 'a' ? '.tp-box-a' : '.tp-box-m')));
+  const box = line.querySelector(k === 'r' ? '.tp-box-r' : (k === 's' ? '.tp-box-s' : (k === 't' ? '.tp-box-t' : (k === 'a' ? '.tp-box-a' : '.tp-box-m'))));
   if (!box) return;
   box.classList.toggle('show');
   btn.classList.toggle('on');
@@ -6254,31 +6272,69 @@ function wkRenderSlideHTML(slide) {
     }
     const lines = P.lines.map(function(L, li) {
       const tag = '第' + (li+1) + '句';
-      /* 句意引用的原句 → 課文中加綠底線 */
-      let txt = parse(L.text);
+      /* 取 HTML 中 tp-rq 的可見原句，供沒有明確 rcite 時自動標示 */
+      function visibleRhetPhrase(html) {
+        if (!html) return '';
+        const m = String(html).match(/<span class=["']tp-rq["'][^>]*>([\s\S]*?)<\/span>/i);
+        if (!m) return '';
+        return m[1].replace(/<[^>]+>/g,'').replace(/──[\s\S]*$/,'').trim();
+      }
       function mark(t, s, cls) {
         if (!s) return t;
         const esc = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return t.replace(new RegExp('(' + esc + ')'), '<span class="' + cls + '">$1</span>');
       }
-      txt = mark(txt, L.cite, 'tp-cite');
-      txt = mark(txt, L.cite2, 'tp-cite');
-      (L.rcite || []).forEach(function(rc){ txt = mark(txt, rc, 'tp-rcite'); });
+
+      let txt = parse(L.text);
+      const styleItems = (L.rhet || []).filter(function(r){ return /開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || '')); });
+      const rhetItems = (L.rhet || []).filter(function(r){ return !(/開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || ''))); });
+
+      /* 句意：有指定引用就標指定句；沒有指定引用就標整個課文行，避免學生不知道抄哪裡。 */
+      if (L.cite) {
+        txt = mark(txt, L.cite, 'tp-cite');
+      } else if (L.cite2) {
+        txt = mark(txt, L.cite2, 'tp-cite');
+      } else if (L.mean) {
+        txt = '<span class="tp-cite">' + txt + '</span>';
+      }
+
+      /* 修辭：保留顯式 rcite；若資料漏寫，從修辭說明中的 tp-rq 自動抓原句。 */
+      let rcites = (L.rcite || []).slice();
+      const stylePhrases = styleItems.map(visibleRhetPhrase).filter(Boolean);
+      rcites = rcites.filter(function(c){
+        return !stylePhrases.some(function(sp){ return sp === c; });
+      });
+      rhetItems.forEach(function(r){
+        const p = visibleRhetPhrase(r[1]);
+        if (p && !rcites.some(function(c){ return c === p; })) rcites.push(p);
+      });
+      if (!rcites.length && rhetItems.length) {
+        /* 最後保底：有修辭但資料沒有可擷取原句時，標整個課文行。 */
+        txt = '<span class="tp-rcite">' + txt + '</span>';
+      } else {
+        rcites.forEach(function(rc){ txt = mark(txt, rc, 'tp-rcite'); });
+      }
+
       const citeHtml = L.cite ? '<span class="tp-citetxt">' + L.cite + '</span>──' : '';
       const cite2Html = L.cite2 ? '<div class="tp-mean2"><span class="tp-citetxt">' + L.cite2 + '</span>──' + (L.mean2||'') + '</div>' : '';
-      const rh = (L.rhet || []).map(function(r) {
+      const rh = rhetItems.map(function(r) {
         return '<div class="tp-rhet"><span class="tp-rt">修辭</span><b>' + r[0] + '</b>　' + r[1] + '</div>';
+      }).join('');
+      const st = styleItems.map(function(r) {
+        return '<div class="tp-style"><span class="tp-stk">筆法</span><b>' + r[0] + '</b>　' + r[1] + '</div>';
       }).join('');
       const mn = L.mean ? '<div class="tp-mean"><span class="tp-mk">句意</span>' + citeHtml + L.mean + cite2Html + '</div>' : '';
       const btns = '<div class="tp-lbtns">' +
         (rh ? '<button class="tp-lb tp-lb-r" onclick="tpShow(this,\'r\')">修辭</button>' : '') +
         (mn ? '<button class="tp-lb tp-lb-m" onclick="tpShow(this,\'m\')">句意</button>' : '') +
+        (st ? '<button class="tp-lb tp-lb-s" onclick="tpShow(this,\'s\')">筆法</button>' : '') +
         (L.tr ? '<button class="tp-lb tp-lb-t" onclick="tpShow(this,\'t\')">翻譯</button>' : '') +
         (L.ask ? '<button class="tp-lb tp-lb-a" onclick="tpShow(this,\'a\')">提問</button>' : '') + '</div>';
       const nt = L.note ? '<span class="tp-src">' + L.note + '</span>' : '';
-      const ex = (rh || mn || L.tr || L.ask) ? '<div class="tp-extra">' + btns +
+      const ex = (rh || mn || st || L.tr || L.ask) ? '<div class="tp-extra">' + btns +
         '<div class="tp-exin"><div class="tp-box tp-box-r">' + rh + '</div>' +
         '<div class="tp-box tp-box-m">' + mn + '</div>' +
+        '<div class="tp-box tp-box-s">' + st + '</div>' +
         '<div class="tp-box tp-box-t">' + (L.tr ? '<div class="tp-tr"><span class="tp-trk">翻譯</span>' + L.tr + '</div>' : '') + '</div>' +
         '<div class="tp-box tp-box-a">' + (L.ask ? '<div class="tp-askbox"><span class="tp-askk">提問</span>' +
           '<ol class="tp-askl">' + L.ask.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' +
@@ -6395,9 +6451,22 @@ function wkRenderSlideHTML(slide) {
           const first = '<th class="jy-th">' + r[0] + '</th>';
           const rest = r.slice(1).map(function(c){
             if (slide.bookKey === '師說') {
-              c = c.replace(/(<div[^>]*class=(?:\"|')hd-in\s+hd-eg-in(?:\"|')[^>]*>)([\s\S]*?)(<\/div>)/g, function(_, open, inner, close){
-                return open + hdFormatShiShuoExample(inner) + close;
-              });
+              /*
+               * 不能用 regex 拆巢狀 <div>：hd-in 裡可能還有可點開的 hd-box，
+               * regex 會在第一個 </div> 就提前結束，導致「點此顯示例句／補充」消失。
+               * 改用 DOM 層級處理，只格式化真正的 hd-in.hd-eg-in 內容，
+               * 完整保留其內部的 hd-box、按鈕與 onclick。
+               */
+              try {
+                const holder = document.createElement('div');
+                holder.innerHTML = c;
+                holder.querySelectorAll('.hd-in.hd-eg-in').forEach(function(node){
+                  node.innerHTML = hdFormatShiShuoExample(node.innerHTML);
+                });
+                c = holder.innerHTML;
+              } catch (e) {
+                /* 若瀏覽器 DOM 處理失敗，保留原始內容，不讓補充消失。 */
+              }
             }
             return '<td>' + c + '</td>';
           }).join('');
