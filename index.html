@@ -1041,6 +1041,28 @@ body.dark-mode .wks-trans {  border-left-color:rgba(200,147,26,0.3); }
 }
 .wkfs-body { flex:1; display:flex; align-items:stretch; overflow:auto; }
 .wkfs-body .wk-slide { min-height:0; flex:1; }
+/* ════ 投影畫記：畫布蓋在課文上，開啟時才能畫，關閉時點擊照常穿透 ════ */
+#wkAnnoCanvas { position:fixed; z-index:99998; touch-action:none; pointer-events:none; }
+#wkfs-anno-btn.on { background:var(--mk-cinnabar,#c0392b) !important; color:#fff !important; }
+.wkAnno-toolbar {
+  position:fixed; z-index:99999; display:none; gap:10px; align-items:center;
+  bottom:26px; left:50%; transform:translateX(-50%);
+  background:rgba(20,16,10,0.9); padding:9px 16px; border-radius:30px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.35);
+}
+.wkAnno-toolbar.show { display:flex; }
+.wkAnno-swatch {
+  width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,0.35);
+  background: var(--sw); cursor:pointer; padding:0; box-sizing:border-box;
+}
+.wkAnno-swatch.on { border-color:#fff; box-shadow:0 0 0 2px var(--sw); }
+.wkAnno-sep { width:1px; height:22px; background:rgba(255,255,255,0.25); }
+.wkAnno-clear {
+  border:1px solid rgba(255,255,255,0.45); background:transparent; color:#fff;
+  border-radius:16px; padding:5px 16px; font-size:0.85em; cursor:pointer;
+  font-family:"Noto Sans TC",sans-serif;
+}
+.wkAnno-clear:active { background:rgba(255,255,255,0.15); }
 #wk-fullscreen .wks-cover-title { font-size:calc(var(--base-size)*4.8); }
 #wk-fullscreen .wks-cover-author { font-size:calc(var(--base-size)*1.8); }
 #wk-fullscreen .wks-orig { font-size:calc(var(--base-size)*2.0); letter-spacing:3px; }
@@ -4227,6 +4249,7 @@ body.dark-mode .hd-table td[rowspan], body.dark-mode .jy-table td[rowspan] { bac
       <button class="wkfs-ctrl-btn" onclick="wkFontDown()" title="縮小字級">A−</button>
       <button class="wkfs-ctrl-btn" onclick="wkFontUp()" title="放大字級">A+</button>
       <button class="wkfs-ctrl-btn" id="wkfs-dark-btn" onclick="toggleDarkMode()" title="深色模式">🌙</button>
+      <button class="wkfs-ctrl-btn" id="wkfs-anno-btn" onclick="wkAnnoToggle(this)" title="畫記模式">✏️</button>
     </div>
     <button class="wkfs-close" onclick="wkCloseProj()">✕ 關閉</button>
   </div>
@@ -4235,6 +4258,16 @@ body.dark-mode .hd-table td[rowspan], body.dark-mode .jy-table td[rowspan] { bac
     <button class="wkfs-nav" onclick="wkPrev()">←</button>
     <span id="wkfs-counter" style="color:var(--gold);font-family:'Noto Serif TC',serif;font-size:15px">─</span>
     <button class="wkfs-nav" onclick="wkNext()">→</button>
+  </div>
+  <canvas id="wkAnnoCanvas"></canvas>
+  <div id="wkAnnoToolbar" class="wkAnno-toolbar">
+    <button class="wkAnno-swatch on" style="--sw:#e63946" onclick="wkAnnoSetColor('#e63946',this)" title="紅"></button>
+    <button class="wkAnno-swatch" style="--sw:#2d7a4f" onclick="wkAnnoSetColor('#2d7a4f',this)" title="綠"></button>
+    <button class="wkAnno-swatch" style="--sw:#1f6fb2" onclick="wkAnnoSetColor('#1f6fb2',this)" title="藍"></button>
+    <button class="wkAnno-swatch" style="--sw:#f0b429" onclick="wkAnnoSetColor('#f0b429',this)" title="黃"></button>
+    <button class="wkAnno-swatch" style="--sw:#111111" onclick="wkAnnoSetColor('#111111',this)" title="黑"></button>
+    <span class="wkAnno-sep"></span>
+    <button class="wkAnno-clear" onclick="wkAnnoClear()">清除</button>
   </div>
 </div>
 
@@ -6516,158 +6549,70 @@ function wkRenderSlideHTML(slide) {
       return container.innerHTML;
     }
 
-    /*
-     * 先把所有課文行 parse 成 HTML，並建立「整頁可見文字座標」。
-     * 這裡特別處理跨行修辭／句意：例如「古之學者必有師。師者」的「頂真」，
-     * 引句跨越兩個 lines，若逐行比對就永遠找不到。
-     * 現在先在整頁文字中定位，再把同一個標記切成各行的局部範圍。
-     */
-    const parsedTexts = (P.lines || []).map(function(L){ return parse(L.text || ''); });
-    const lineMeasures = parsedTexts.map(function(txt){
-      const el = document.createElement('div');
-      el.innerHTML = txt;
-      const chars = tpBuildVisibleChars(el);
-      return { html: txt, el: el, chars: chars, text: chars.map(function(c){ return c.ch; }).join('') };
-    });
-    const lineStarts = [];
-    let pageVisibleText = '';
-    lineMeasures.forEach(function(m){
-      lineStarts.push(pageVisibleText.length);
-      pageVisibleText += m.text;
-    });
-
-    function locateInLineOrPage(lineText, lineStart, phrase) {
-      if (!phrase) return null;
-      const local = locate(lineText, phrase);
-      if (local) return { start: lineStart + local.start, end: lineStart + local.end };
-      return locate(pageVisibleText, phrase);
-    }
-
-    /* 對跨行引句只取「目前這一行真正覆蓋到的區段」。 */
-    function sliceGlobalRange(globalRange, lineIndex) {
-      if (!globalRange) return null;
-      const ls = lineStarts[lineIndex];
-      const le = ls + lineMeasures[lineIndex].text.length;
-      const s0 = Math.max(globalRange.start, ls);
-      const e0 = Math.min(globalRange.end, le);
-      if (e0 <= s0) return null;
-      return { start: s0 - ls, end: e0 - ls };
-    }
-
-    const lineStates = (P.lines || []).map(function(L, li) {
-      const styleItems = (L.rhet || []).filter(function(r){
-        return /開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || ''));
-      });
-      const rhetItems = (L.rhet || []).filter(function(r){
-        return !(/開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || '')));
-      });
+    const lines = P.lines.map(function(L, li) {
+      let txt = parse(L.text);
+      const styleItems = (L.rhet || []).filter(function(r){ return /開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || '')); });
+      const rhetItems = (L.rhet || []).filter(function(r){ return !(/開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || ''))); });
       const stylePhrases = styleItems.map(visibleRhetPhrase).filter(Boolean);
       const usedRcite = {};
 
+      /* ── 句意層：cite／cite2 各自一條可獨立開關；都沒有指定引用時，整句算一條 ── */
       const meanLayers = [];
-      if (L.cite) meanLayers.push({ id:'m' + li + '_0', phrase:String(L.cite) });
-      if (L.cite2) meanLayers.push({ id:'m' + li + '_1', phrase:String(L.cite2) });
-      if (!meanLayers.length && L.mean) meanLayers.push({ id:'m' + li + '_0', phrase:'' });
+      if (L.cite) meanLayers.push({ id: 'm' + li + '_0', phrase: L.cite });
+      if (L.cite2) meanLayers.push({ id: 'm' + li + '_1', phrase: L.cite2 });
+      if (!meanLayers.length && L.mean) meanLayers.push({ id: 'm' + li + '_0', phrase: '' });
 
-      const rhetLayers = rhetItems.map(function(r, ri){
+      /* ── 修辭層：每一條 rhet 各自一條可獨立開關；有標重點字時只記重點字的位置 ── */
+      const rhetLayers = rhetItems.map(function(r, ri) {
         const q = visibleRhetQuote(r[1]);
         let quote = q;
         if (quote && stylePhrases.indexOf(quote.full.trim()) !== -1) quote = null;
         if (!quote || !quote.full) {
           const explicit = (L.rcite || []).find(function(c){ return !usedRcite[c]; });
-          if (explicit) {
-            quote = { full:String(explicit), hiRanges:[] };
-            usedRcite[String(explicit)] = true;
-          }
+          if (explicit) { quote = { full: explicit, hiRanges: [] }; usedRcite[explicit] = true; }
         } else {
           usedRcite[quote.full.trim()] = true;
         }
-        return {
-          id:'r' + li + '_' + ri,
-          name:r[0],
-          desc:r[1],
-          quote:quote,
-          globalRange:null,
-          matched:false
-        };
+        return { id: 'r' + li + '_' + ri, name: r[0], desc: r[1], quote: quote };
       });
 
-      /* 修辭／句意定位：先找同一行，找不到才到整頁找，以降低重複短句誤配。 */
-      meanLayers.forEach(function(m){
-        if (!m.phrase) {
-          m.globalRange = { start: lineStarts[li], end: lineStarts[li] + lineMeasures[li].text.length };
-          m.matched = true;
-          return;
-        }
-        const found = locateInLineOrPage(lineMeasures[li].text, lineStarts[li], m.phrase);
-        if (found) { m.globalRange = found; m.matched = true; }
-      });
-
-      rhetLayers.forEach(function(r){
-        if (!r.quote || !r.quote.full) return;
-        const found = locateInLineOrPage(lineMeasures[li].text, lineStarts[li], r.quote.full);
-        if (!found) return;
-        r.globalRange = found;
-        r.matched = true;
-      });
-
-      return {
-        L:L,
-        li:li,
-        html:lineMeasures[li].html,
-        styleItems:styleItems,
-        rhetLayers:rhetLayers,
-        meanLayers:meanLayers
-      };
-    });
-
-    const lines = lineStates.map(function(state) {
-      const L = state.L;
-      const li = state.li;
-      let txt = state.html;
+      /* ── 逐一定位，得到每一層在「可見文字」座標中的範圍，再一次性上色 ── */
+      const measureEl = document.createElement('div');
+      measureEl.innerHTML = txt;
+      const visibleChars = tpBuildVisibleChars(measureEl);
+      const visibleText = visibleChars.map(function(c){ return c.ch; }).join('');
       const ranges = [];
-
-      state.meanLayers.forEach(function(m){
-        const local = sliceGlobalRange(m.globalRange, li);
-        if (local) ranges.push({ id:m.id, start:local.start, end:local.end });
+      meanLayers.forEach(function(m) {
+        const loc = m.phrase ? locate(visibleText, m.phrase) : { start: 0, end: visibleText.length };
+        if (loc) { m.matched = true; ranges.push({ id: m.id, start: loc.start, end: loc.end }); }
       });
-
-      state.rhetLayers.forEach(function(r){
-        if (!r.globalRange) return;
-        if (r.quote && r.quote.hiRanges && r.quote.hiRanges.length) {
-          /*
-           * hiRanges 是相對於整個 quote 的位置。
-           * 轉成整頁絕對座標後，再切回目前這一行。
-           */
-          r.quote.hiRanges.forEach(function(hr){
-            const gs = r.globalRange.start + hr[0];
-            const ge = r.globalRange.start + hr[1];
-            const local = sliceGlobalRange({start:gs, end:ge}, li);
-            if (local) ranges.push({ id:r.id, start:local.start, end:local.end });
+      rhetLayers.forEach(function(r) {
+        if (!r.quote || !r.quote.full) return;
+        const loc = locate(visibleText, r.quote.full);
+        if (!loc) return;
+        r.matched = true;
+        if (r.quote.hiRanges.length) {
+          r.quote.hiRanges.forEach(function(hr) {
+            ranges.push({ id: r.id, start: loc.start + hr[0], end: loc.start + hr[1] });
           });
         } else {
-          const local = sliceGlobalRange(r.globalRange, li);
-          if (local) ranges.push({ id:r.id, start:local.start, end:local.end });
+          ranges.push({ id: r.id, start: loc.start, end: loc.end });
         }
       });
-
       txt = tpApplyLayers(txt, ranges);
 
       const citeHtml = L.cite ? '<span class="tp-citetxt">' + L.cite + '</span>──' : '';
       const cite2Html = L.cite2 ? '<div class="tp-mean2"><span class="tp-citetxt">' + L.cite2 + '</span>──' + (L.mean2||'') + '</div>' : '';
-
-      const rh = state.rhetLayers.map(function(r) {
+      const rh = rhetLayers.map(function(r) {
         const tog = r.matched ? ' tp-item-tog" data-lid="' + r.id + '" onclick="tpLayerToggle(\'' + r.id + '\',this)"' : ' tp-item-static"';
         return '<div class="tp-rhet' + tog + '><span class="tp-rt">修辭</span><b>' + r.name + '</b>　' + r.desc + '</div>';
       }).join('');
-
-      const st = state.styleItems.map(function(r) {
+      const st = styleItems.map(function(r) {
         return '<div class="tp-style"><span class="tp-stk">筆法</span><b>' + r[0] + '</b>　' + r[1] + '</div>';
       }).join('');
-
       let mn = '';
       if (L.mean) {
-        const m0 = state.meanLayers[0], m1 = state.meanLayers[1];
+        const m0 = meanLayers[0], m1 = meanLayers[1];
         const tog0 = (m0 && m0.matched) ? ' tp-item-tog" data-lid="' + m0.id + '" onclick="tpLayerToggle(\'' + m0.id + '\',this)"' : ' tp-item-static"';
         mn = '<div class="tp-mean' + tog0 + '><span class="tp-mk">句意</span>' + citeHtml + L.mean + '</div>';
         if (cite2Html && m1) {
@@ -6675,14 +6620,12 @@ function wkRenderSlideHTML(slide) {
           mn += '<div class="tp-mean2' + tog1 + '><span class="tp-citetxt">' + L.cite2 + '</span>──' + (L.mean2||'') + '</div>';
         }
       }
-
       const btns = '<div class="tp-lbtns">' +
         (rh ? '<button class="tp-lb tp-lb-r" onclick="tpShow(this,\'r\')">修辭</button>' : '') +
         (mn ? '<button class="tp-lb tp-lb-m" onclick="tpShow(this,\'m\')">句意</button>' : '') +
         (st ? '<button class="tp-lb tp-lb-s" onclick="tpShow(this,\'s\')">筆法</button>' : '') +
         (L.tr ? '<button class="tp-lb tp-lb-t" onclick="tpShow(this,\'t\')">翻譯</button>' : '') +
         (L.ask ? '<button class="tp-lb tp-lb-a" onclick="tpShow(this,\'a\')">提問</button>' : '') + '</div>';
-
       const nt = L.note ? '<span class="tp-src">' + L.note + '</span>' : '';
       const ex = (rh || mn || st || L.tr || L.ask) ? '<div class="tp-extra">' + btns +
         '<div class="tp-exin"><div class="tp-box tp-box-r">' + rh + '</div>' +
@@ -6693,9 +6636,7 @@ function wkRenderSlideHTML(slide) {
           '<ol class="tp-askl">' + L.ask.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' +
           (L.askT ? '<div class="tp-askt"><button class="tp-askb" onclick="this.parentNode.classList.toggle(\'show\')">師</button>' +
             '<div class="tp-asktin">' + L.askT + '</div></div>' : '') + '</div>' : '') + '</div></div></div>' : '';
-
-      return '<div class="tp-line" data-li="' + li + '">' +
-        '<div class="tp-text">' + txt + nt + '</div>' + ex + '</div>';
+      return '<div class="tp-line" data-li="' + li + '">' + '<div class="tp-text">' + txt + nt + '</div>' + ex + '</div>';
     }).join('');
     const st0 = (P.noteStart || 1) - 1;
     const notes = (P.notes || []).map(function(n, i) {
@@ -7025,6 +6966,7 @@ function wkRenderCurrent() {
       const fsl = fsBody.querySelector('.wk-slide');
       if (fsl) { fsl.classList.remove('mk-ink-in'); void fsl.offsetWidth; fsl.classList.add('mk-ink-in'); }
     }
+    if (typeof wkAnnoClear === 'function') wkAnnoClear(); /* 換頁時清空上一頁的畫記 */
     const fsCnt = document.getElementById('wkfs-counter');
     if (fsCnt) fsCnt.textContent = counter;
     const fsTitle = document.getElementById('wkfs-title');
@@ -7093,6 +7035,7 @@ function wkOpenProj() {
   const fs = document.getElementById('wk-fullscreen');
   fs.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  wkAnnoSetActive(false);
 
   // Section buttons in fullscreen header
   const fsSec = document.getElementById('wkfs-sections');
@@ -7112,6 +7055,86 @@ function wkCloseProj() {
   const fs = document.getElementById('wk-fullscreen');
   fs.style.display = 'none';
   document.body.style.overflow = '';
+  wkAnnoSetActive(false);
+  wkAnnoClear();
+}
+
+/* ════ 投影畫記：canvas 蓋在 wkfs-body 上，關閉時 pointer-events:none 讓點擊照常穿透課文 ════ */
+let wkAnnoActive = false;
+let wkAnnoColor = '#e63946';
+const wkAnnoWidth = 4;
+let wkAnnoDrawing = false;
+let wkAnnoLastX = 0, wkAnnoLastY = 0;
+let wkAnnoRectKey = '';
+let wkAnnoBound = false;
+
+function wkAnnoResize(force) {
+  const canvas = document.getElementById('wkAnnoCanvas');
+  const body = document.getElementById('wkfs-body');
+  if (!canvas || !body) return;
+  const rect = body.getBoundingClientRect();
+  const key = rect.left + ',' + rect.top + ',' + rect.width + ',' + rect.height;
+  if (!force && key === wkAnnoRectKey) return; // 尺寸沒變就不重畫，避免手機網址列伸縮誤清畫記
+  wkAnnoRectKey = key;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.left = rect.left + 'px';
+  canvas.style.top = rect.top + 'px';
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function wkAnnoBindEvents() {
+  if (wkAnnoBound) return;
+  wkAnnoBound = true;
+  const canvas = document.getElementById('wkAnnoCanvas');
+  if (!canvas) return;
+  canvas.addEventListener('pointerdown', function(e) {
+    if (!wkAnnoActive) return;
+    e.preventDefault();
+    wkAnnoDrawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    const r = canvas.getBoundingClientRect();
+    wkAnnoLastX = e.clientX - r.left; wkAnnoLastY = e.clientY - r.top;
+  });
+  canvas.addEventListener('pointermove', function(e) {
+    if (!wkAnnoActive || !wkAnnoDrawing) return;
+    e.preventDefault();
+    const ctx = canvas.getContext('2d');
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    ctx.strokeStyle = wkAnnoColor; ctx.lineWidth = wkAnnoWidth;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(wkAnnoLastX, wkAnnoLastY); ctx.lineTo(x, y); ctx.stroke();
+    wkAnnoLastX = x; wkAnnoLastY = y;
+  });
+  canvas.addEventListener('pointerup', function() { wkAnnoDrawing = false; });
+  canvas.addEventListener('pointercancel', function() { wkAnnoDrawing = false; });
+  window.addEventListener('resize', function() { if (wkAnnoActive) wkAnnoResize(); });
+}
+function wkAnnoSetActive(on) {
+  wkAnnoActive = on;
+  const canvas = document.getElementById('wkAnnoCanvas');
+  const toolbar = document.getElementById('wkAnnoToolbar');
+  const btn = document.getElementById('wkfs-anno-btn');
+  if (canvas) canvas.style.pointerEvents = on ? 'auto' : 'none';
+  if (toolbar) toolbar.classList.toggle('show', on);
+  if (btn) btn.classList.toggle('on', on);
+  if (on) { wkAnnoBindEvents(); wkAnnoResize(true); }
+}
+function wkAnnoToggle() { wkAnnoSetActive(!wkAnnoActive); }
+function wkAnnoSetColor(c, btn) {
+  wkAnnoColor = c;
+  document.querySelectorAll('.wkAnno-swatch').forEach(function(s){ s.classList.remove('on'); });
+  if (btn) btn.classList.add('on');
+}
+function wkAnnoClear() {
+  const canvas = document.getElementById('wkAnnoCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /* ── 朗讀頁螢光筆：‹‹...›› → highlight span ── */
