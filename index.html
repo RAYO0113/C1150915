@@ -4468,6 +4468,8 @@ body.dark-mode .wk-wa-top { background:var(--mk-paper,#1c1917); }
   word-break:break-word !important;
 }
 .tp-g.show > .tp-gd, .tp-p.show > .tp-pd, .tp-z.show > .tp-zd { display:block !important; }
+/* 浮框搬到 body 後仍必須可見；不能依賴原本的父子 selector。 */
+.tp-gd.tp-popup-detached, .tp-pd.tp-popup-detached, .tp-zd.tp-popup-detached { display:block !important; }
 
 /* 藍色：字義／字音補充，包括「生乎吾前／後」；浮框同樣是藍色芫荽。 */
 .tp-g, .tp-p.tp-p-blue, .tp-z {
@@ -6222,6 +6224,8 @@ function tpTog(el, ev) {
 /* ════ v32：補充浮框智慧上下定位，避免相鄰標記全部擠在同一側 ════ */
 function tpPopNode(el) {
   if (!el) return null;
+  /* 浮框開啟後會移到 body，避免受到課文行高、overflow 或巢狀 inline span 影響。 */
+  if (el._tpPopup && el._tpPopup.isConnected) return el._tpPopup;
   return el.querySelector('.tp-gd,.tp-pd,.tp-zd');
 }
 function tpPopRect(el) {
@@ -6248,9 +6252,38 @@ function tpPopupBounds(el) {
     bottom: Math.min(window.innerHeight - 6, r.bottom - 4)
   };
 }
+function tpDetachPopup(el) {
+  if (!el) return null;
+  let pop = el._tpPopup || el.querySelector('.tp-gd,.tp-pd,.tp-zd');
+  if (!pop) return null;
+  if (!el._tpPopupSlot) {
+    el._tpPopupSlot = document.createComment('tp-popup-slot');
+    pop.parentNode.insertBefore(el._tpPopupSlot, pop);
+  }
+  if (pop.parentNode !== document.body) document.body.appendChild(pop);
+  pop.classList.add('tp-popup-detached');
+  el._tpPopup = pop;
+  return pop;
+}
+function tpRestorePopup(el) {
+  if (!el || !el._tpPopup) return;
+  const pop = el._tpPopup;
+  pop.classList.remove('tp-popup-detached');
+  pop.style.visibility = 'hidden';
+  pop.style.display = 'none';
+  const slot = el._tpPopupSlot;
+  if (slot && slot.parentNode) {
+    slot.parentNode.insertBefore(pop, slot.nextSibling);
+    slot.remove();
+  } else if (el.isConnected) {
+    el.appendChild(pop);
+  }
+  delete el._tpPopup;
+  delete el._tpPopupSlot;
+}
 function tpPlacePopup(el) {
   if (!el || !el.classList.contains('show')) return;
-  const pop = tpPopNode(el);
+  const pop = tpDetachPopup(el);
   if (!pop) return;
 
   const anchor = el.getBoundingClientRect();
@@ -6258,7 +6291,7 @@ function tpPlacePopup(el) {
   const maxW = Math.max(96, Math.floor(bounds.right - bounds.left));
   const fs = parseFloat(getComputedStyle(el).fontSize) || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--base-size')) || 16;
 
-  /* 固定定位：浮框脫離課文排版，不會把原文撐開，也不會跑出螢幕。 */
+  /* 真正的「浮框」：搬到 body 後用 fixed 定位，完全脫離課文排版流。 */
   pop.style.position = 'fixed';
   pop.style.display = 'block';
   pop.style.visibility = 'hidden';
@@ -6266,8 +6299,6 @@ function tpPlacePopup(el) {
   pop.style.left = '0px';
   pop.style.right = 'auto';
   pop.style.top = '0px';
-  /* 關鍵修正：舊 CSS 留有 bottom:100%，上方浮框時會同時套用 top+bottom，
-     造成邊框與文字分離。固定定位時一律取消 bottom，讓文字完整待在框內。 */
   pop.style.bottom = 'auto';
   pop.style.width = 'max-content';
   pop.style.height = 'auto';
@@ -6275,11 +6306,13 @@ function tpPlacePopup(el) {
   pop.style.maxWidth = maxW + 'px';
   pop.style.fontSize = fs + 'px';
   pop.style.lineHeight = '1.5';
-  /* 四行上限：4 × 1.5em，再加上下 padding；字體多大，欄高就跟著等比例放大。 */
+  pop.style.boxSizing = 'border-box';
+  /* 仍維持四行上限；若內容超過，浮框本身保持可讀高度並在內部捲動。 */
   pop.style.maxHeight = 'calc(6em + 14px)';
+  pop.style.overflowY = 'auto';
+  pop.style.overflowX = 'hidden';
 
   let pr = pop.getBoundingClientRect();
-  /* 若 max-content 在目前寬度下仍被瀏覽器量測成異常寬，強制回到課文可用寬度。 */
   if (!isFinite(pr.width) || pr.width <= 0) {
     pop.style.width = Math.min(maxW, window.innerWidth - 16) + 'px';
     pr = pop.getBoundingClientRect();
@@ -6289,43 +6322,48 @@ function tpPlacePopup(el) {
   }
 
   const gap = 3;
-  const left = Math.max(bounds.left, Math.min(
-    anchor.left + anchor.width / 2 - pr.width / 2,
-    bounds.right - pr.width
-  ));
-  pop.style.left = Math.round(left) + 'px';
+  const baseLeft = anchor.left + anchor.width / 2 - pr.width / 2;
+  const leftCandidates = [
+    baseLeft,
+    anchor.left,
+    anchor.right - pr.width,
+    baseLeft - Math.min(24, pr.width),
+    baseLeft + Math.min(24, pr.width)
+  ].map(x => Math.max(bounds.left, Math.min(x, bounds.right - pr.width)));
 
+  /*
+   * 核心修正：只調整左右，不用「往下推很多」來避開其他浮框。
+   * 因此浮框永遠緊貼原文的上方或下方；多個浮框同時存在時，優先橫向錯開。
+   */
   const others = Array.from(document.querySelectorAll('.tp-g.show,.tp-p.show,.tp-z.show'))
     .filter(x => x !== el && x.closest('.wk-slide') === el.closest('.wk-slide'))
     .map(tpPopRect)
     .filter(Boolean);
 
-  /* 優先貼近原文：上／下都只留極小間距；避免為了避開相鄰浮框而突然跳很遠。 */
-  const candidates = [
-    { y: anchor.top - pr.height - gap, below: false },
-    { y: anchor.bottom + gap, below: true },
-    { y: anchor.top - pr.height - 5, below: false },
-    { y: anchor.bottom + 5, below: true }
-  ];
+  const yCandidates = [];
+  const aboveY = anchor.top - pr.height - gap;
+  const belowY = anchor.bottom + gap;
+  if (aboveY >= bounds.top && aboveY + pr.height <= bounds.bottom) yCandidates.push({y:aboveY, below:false});
+  if (belowY >= bounds.top && belowY + pr.height <= bounds.bottom) yCandidates.push({y:belowY, below:true});
+  if (!yCandidates.length) {
+    if (aboveY >= bounds.top) yCandidates.push({y:Math.max(bounds.top, aboveY), below:false});
+    else yCandidates.push({y:Math.min(bounds.bottom - pr.height, belowY), below:true});
+  }
 
   let chosen = null;
-  for (const c of candidates) {
-    const y = c.y;
-    if (y < 6 || y + pr.height > window.innerHeight - 6) continue;
-    const test = {left, right:left + pr.width, top:y, bottom:y + pr.height};
-    if (!others.some(o => tpRectsOverlap(test, o))) {
-      chosen = c;
-      break;
+  for (const yc of yCandidates) {
+    for (const lx of leftCandidates) {
+      const test = {left:lx, right:lx + pr.width, top:yc.y, bottom:yc.y + pr.height};
+      if (!others.some(o => tpRectsOverlap(test, o))) {
+        chosen = {y:yc.y, below:yc.below, left:lx};
+        break;
+      }
     }
+    if (chosen) break;
   }
+  if (!chosen) chosen = {y:yCandidates[0].y, below:yCandidates[0].below, left:leftCandidates[0]};
 
-  if (!chosen) {
-    const above = anchor.top - pr.height - 3;
-    const below = anchor.bottom + 3;
-    const y = (above >= 6) ? above : Math.min(below, window.innerHeight - pr.height - 6);
-    chosen = {y: Math.max(6, y), below: y > anchor.bottom};
-  }
-
+  pop.style.left = Math.round(chosen.left) + 'px';
   pop.style.top = Math.round(chosen.y) + 'px';
   pop.style.visibility = 'visible';
   el.classList.toggle('tp-pop-below', !!chosen.below);
@@ -6336,10 +6374,13 @@ function tpTogglePop(el, ev) {
   const was = el.classList.contains('show');
   el.classList.toggle('show');
   if (!was) {
+    tpDetachPopup(el);
     requestAnimationFrame(function(){
       tpPlacePopup(el);
       requestAnimationFrame(function(){ tpPlacePopup(el); });
     });
+  } else {
+    tpRestorePopup(el);
   }
 }
 /* 視窗大小或捲動變動時，開啟中的浮框重新定位。 */
