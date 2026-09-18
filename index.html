@@ -6516,70 +6516,158 @@ function wkRenderSlideHTML(slide) {
       return container.innerHTML;
     }
 
-    const lines = P.lines.map(function(L, li) {
-      let txt = parse(L.text);
-      const styleItems = (L.rhet || []).filter(function(r){ return /開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || '')); });
-      const rhetItems = (L.rhet || []).filter(function(r){ return !(/開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || ''))); });
+    /*
+     * 先把所有課文行 parse 成 HTML，並建立「整頁可見文字座標」。
+     * 這裡特別處理跨行修辭／句意：例如「古之學者必有師。師者」的「頂真」，
+     * 引句跨越兩個 lines，若逐行比對就永遠找不到。
+     * 現在先在整頁文字中定位，再把同一個標記切成各行的局部範圍。
+     */
+    const parsedTexts = (P.lines || []).map(function(L){ return parse(L.text || ''); });
+    const lineMeasures = parsedTexts.map(function(txt){
+      const el = document.createElement('div');
+      el.innerHTML = txt;
+      const chars = tpBuildVisibleChars(el);
+      return { html: txt, el: el, chars: chars, text: chars.map(function(c){ return c.ch; }).join('') };
+    });
+    const lineStarts = [];
+    let pageVisibleText = '';
+    lineMeasures.forEach(function(m){
+      lineStarts.push(pageVisibleText.length);
+      pageVisibleText += m.text;
+    });
+
+    function locateInLineOrPage(lineText, lineStart, phrase) {
+      if (!phrase) return null;
+      const local = locate(lineText, phrase);
+      if (local) return { start: lineStart + local.start, end: lineStart + local.end };
+      return locate(pageVisibleText, phrase);
+    }
+
+    /* 對跨行引句只取「目前這一行真正覆蓋到的區段」。 */
+    function sliceGlobalRange(globalRange, lineIndex) {
+      if (!globalRange) return null;
+      const ls = lineStarts[lineIndex];
+      const le = ls + lineMeasures[lineIndex].text.length;
+      const s0 = Math.max(globalRange.start, ls);
+      const e0 = Math.min(globalRange.end, le);
+      if (e0 <= s0) return null;
+      return { start: s0 - ls, end: e0 - ls };
+    }
+
+    const lineStates = (P.lines || []).map(function(L, li) {
+      const styleItems = (L.rhet || []).filter(function(r){
+        return /開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || ''));
+      });
+      const rhetItems = (L.rhet || []).filter(function(r){
+        return !(/開門見山/.test(String(r[0] || '')) || /文章筆法|寫作手法/.test(String(r[0] || '')));
+      });
       const stylePhrases = styleItems.map(visibleRhetPhrase).filter(Boolean);
       const usedRcite = {};
 
-      /* ── 句意層：cite／cite2 各自一條可獨立開關；都沒有指定引用時，整句算一條 ── */
       const meanLayers = [];
-      if (L.cite) meanLayers.push({ id: 'm' + li + '_0', phrase: L.cite });
-      if (L.cite2) meanLayers.push({ id: 'm' + li + '_1', phrase: L.cite2 });
-      if (!meanLayers.length && L.mean) meanLayers.push({ id: 'm' + li + '_0', phrase: '' });
+      if (L.cite) meanLayers.push({ id:'m' + li + '_0', phrase:String(L.cite) });
+      if (L.cite2) meanLayers.push({ id:'m' + li + '_1', phrase:String(L.cite2) });
+      if (!meanLayers.length && L.mean) meanLayers.push({ id:'m' + li + '_0', phrase:'' });
 
-      /* ── 修辭層：每一條 rhet 各自一條可獨立開關；有標重點字時只記重點字的位置 ── */
-      const rhetLayers = rhetItems.map(function(r, ri) {
+      const rhetLayers = rhetItems.map(function(r, ri){
         const q = visibleRhetQuote(r[1]);
         let quote = q;
         if (quote && stylePhrases.indexOf(quote.full.trim()) !== -1) quote = null;
         if (!quote || !quote.full) {
           const explicit = (L.rcite || []).find(function(c){ return !usedRcite[c]; });
-          if (explicit) { quote = { full: explicit, hiRanges: [] }; usedRcite[explicit] = true; }
+          if (explicit) {
+            quote = { full:String(explicit), hiRanges:[] };
+            usedRcite[String(explicit)] = true;
+          }
         } else {
           usedRcite[quote.full.trim()] = true;
         }
-        return { id: 'r' + li + '_' + ri, name: r[0], desc: r[1], quote: quote };
+        return {
+          id:'r' + li + '_' + ri,
+          name:r[0],
+          desc:r[1],
+          quote:quote,
+          globalRange:null,
+          matched:false
+        };
       });
 
-      /* ── 逐一定位，得到每一層在「可見文字」座標中的範圍，再一次性上色 ── */
-      const measureEl = document.createElement('div');
-      measureEl.innerHTML = txt;
-      const visibleChars = tpBuildVisibleChars(measureEl);
-      const visibleText = visibleChars.map(function(c){ return c.ch; }).join('');
-      const ranges = [];
-      meanLayers.forEach(function(m) {
-        const loc = m.phrase ? locate(visibleText, m.phrase) : { start: 0, end: visibleText.length };
-        if (loc) { m.matched = true; ranges.push({ id: m.id, start: loc.start, end: loc.end }); }
+      /* 修辭／句意定位：先找同一行，找不到才到整頁找，以降低重複短句誤配。 */
+      meanLayers.forEach(function(m){
+        if (!m.phrase) {
+          m.globalRange = { start: lineStarts[li], end: lineStarts[li] + lineMeasures[li].text.length };
+          m.matched = true;
+          return;
+        }
+        const found = locateInLineOrPage(lineMeasures[li].text, lineStarts[li], m.phrase);
+        if (found) { m.globalRange = found; m.matched = true; }
       });
-      rhetLayers.forEach(function(r) {
+
+      rhetLayers.forEach(function(r){
         if (!r.quote || !r.quote.full) return;
-        const loc = locate(visibleText, r.quote.full);
-        if (!loc) return;
+        const found = locateInLineOrPage(lineMeasures[li].text, lineStarts[li], r.quote.full);
+        if (!found) return;
+        r.globalRange = found;
         r.matched = true;
-        if (r.quote.hiRanges.length) {
-          r.quote.hiRanges.forEach(function(hr) {
-            ranges.push({ id: r.id, start: loc.start + hr[0], end: loc.start + hr[1] });
+      });
+
+      return {
+        L:L,
+        li:li,
+        html:lineMeasures[li].html,
+        styleItems:styleItems,
+        rhetLayers:rhetLayers,
+        meanLayers:meanLayers
+      };
+    });
+
+    const lines = lineStates.map(function(state) {
+      const L = state.L;
+      const li = state.li;
+      let txt = state.html;
+      const ranges = [];
+
+      state.meanLayers.forEach(function(m){
+        const local = sliceGlobalRange(m.globalRange, li);
+        if (local) ranges.push({ id:m.id, start:local.start, end:local.end });
+      });
+
+      state.rhetLayers.forEach(function(r){
+        if (!r.globalRange) return;
+        if (r.quote && r.quote.hiRanges && r.quote.hiRanges.length) {
+          /*
+           * hiRanges 是相對於整個 quote 的位置。
+           * 轉成整頁絕對座標後，再切回目前這一行。
+           */
+          r.quote.hiRanges.forEach(function(hr){
+            const gs = r.globalRange.start + hr[0];
+            const ge = r.globalRange.start + hr[1];
+            const local = sliceGlobalRange({start:gs, end:ge}, li);
+            if (local) ranges.push({ id:r.id, start:local.start, end:local.end });
           });
         } else {
-          ranges.push({ id: r.id, start: loc.start, end: loc.end });
+          const local = sliceGlobalRange(r.globalRange, li);
+          if (local) ranges.push({ id:r.id, start:local.start, end:local.end });
         }
       });
+
       txt = tpApplyLayers(txt, ranges);
 
       const citeHtml = L.cite ? '<span class="tp-citetxt">' + L.cite + '</span>──' : '';
       const cite2Html = L.cite2 ? '<div class="tp-mean2"><span class="tp-citetxt">' + L.cite2 + '</span>──' + (L.mean2||'') + '</div>' : '';
-      const rh = rhetLayers.map(function(r) {
+
+      const rh = state.rhetLayers.map(function(r) {
         const tog = r.matched ? ' tp-item-tog" data-lid="' + r.id + '" onclick="tpLayerToggle(\'' + r.id + '\',this)"' : ' tp-item-static"';
         return '<div class="tp-rhet' + tog + '><span class="tp-rt">修辭</span><b>' + r.name + '</b>　' + r.desc + '</div>';
       }).join('');
-      const st = styleItems.map(function(r) {
+
+      const st = state.styleItems.map(function(r) {
         return '<div class="tp-style"><span class="tp-stk">筆法</span><b>' + r[0] + '</b>　' + r[1] + '</div>';
       }).join('');
+
       let mn = '';
       if (L.mean) {
-        const m0 = meanLayers[0], m1 = meanLayers[1];
+        const m0 = state.meanLayers[0], m1 = state.meanLayers[1];
         const tog0 = (m0 && m0.matched) ? ' tp-item-tog" data-lid="' + m0.id + '" onclick="tpLayerToggle(\'' + m0.id + '\',this)"' : ' tp-item-static"';
         mn = '<div class="tp-mean' + tog0 + '><span class="tp-mk">句意</span>' + citeHtml + L.mean + '</div>';
         if (cite2Html && m1) {
@@ -6587,12 +6675,14 @@ function wkRenderSlideHTML(slide) {
           mn += '<div class="tp-mean2' + tog1 + '><span class="tp-citetxt">' + L.cite2 + '</span>──' + (L.mean2||'') + '</div>';
         }
       }
+
       const btns = '<div class="tp-lbtns">' +
         (rh ? '<button class="tp-lb tp-lb-r" onclick="tpShow(this,\'r\')">修辭</button>' : '') +
         (mn ? '<button class="tp-lb tp-lb-m" onclick="tpShow(this,\'m\')">句意</button>' : '') +
         (st ? '<button class="tp-lb tp-lb-s" onclick="tpShow(this,\'s\')">筆法</button>' : '') +
         (L.tr ? '<button class="tp-lb tp-lb-t" onclick="tpShow(this,\'t\')">翻譯</button>' : '') +
         (L.ask ? '<button class="tp-lb tp-lb-a" onclick="tpShow(this,\'a\')">提問</button>' : '') + '</div>';
+
       const nt = L.note ? '<span class="tp-src">' + L.note + '</span>' : '';
       const ex = (rh || mn || st || L.tr || L.ask) ? '<div class="tp-extra">' + btns +
         '<div class="tp-exin"><div class="tp-box tp-box-r">' + rh + '</div>' +
@@ -6603,7 +6693,9 @@ function wkRenderSlideHTML(slide) {
           '<ol class="tp-askl">' + L.ask.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' +
           (L.askT ? '<div class="tp-askt"><button class="tp-askb" onclick="this.parentNode.classList.toggle(\'show\')">師</button>' +
             '<div class="tp-asktin">' + L.askT + '</div></div>' : '') + '</div>' : '') + '</div></div></div>' : '';
-      return '<div class="tp-line" data-li="' + li + '">' + '<div class="tp-text">' + txt + nt + '</div>' + ex + '</div>';
+
+      return '<div class="tp-line" data-li="' + li + '">' +
+        '<div class="tp-text">' + txt + nt + '</div>' + ex + '</div>';
     }).join('');
     const st0 = (P.noteStart || 1) - 1;
     const notes = (P.notes || []).map(function(n, i) {
