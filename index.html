@@ -3678,7 +3678,7 @@ body.dark-mode .wks-lesson { background: var(--mk-paper,#1c1917) !important; }
 .ls-top { display:flex; align-items:center; gap:10px; margin-bottom:20px;
   padding-bottom:12px; border-bottom:2px solid var(--L-zhi,#d2691e); }
 .ls-sec { background: var(--L-zhi,#d2691e); color:#fff; font-family:"Noto Serif TC",serif;
-  font-size:calc(var(--base-size)*0.9); padding:3px 15px; border-radius:3px; letter-spacing:0.12em; }
+  font-size:20px !important; padding:3px 15px; border-radius:3px; letter-spacing:0.12em; }
 .ls-time { border:1px solid var(--L-zhi,#d2691e); color:var(--L-zhi,#d2691e);
   font-family:"Noto Sans TC",sans-serif; font-size:calc(var(--base-size)*0.85);
   padding:2px 12px; border-radius:3px; }
@@ -3698,7 +3698,7 @@ body.dark-mode .wks-lesson { background: var(--mk-paper,#1c1917) !important; }
   font-size:calc(var(--base-size)*1.85); font-weight:900; color:var(--mk-ink-deep,#211710);
   line-height:1.65; letter-spacing:0.06em; margin-bottom:22px; }
 .ls-sub2 { margin-top:16px; font-family:"Noto Sans TC",sans-serif;
-  font-size:calc(var(--base-size)*1.15); color:var(--L-zhi,#d2691e); }
+  font-size:20px !important; color:var(--L-zhi,#d2691e); }
 .ls-ask, .ls-task { margin:0 0 14px; padding-left:1.6em;
   font-family:"Noto Sans TC",sans-serif; font-size:calc(var(--base-size)*1.3);
   line-height:2.2; color:var(--mk-ink,#33271a); }
@@ -4003,7 +4003,7 @@ body.dark-mode .hd-table td[rowspan], body.dark-mode .jy-table td[rowspan] { bac
 
 /* 顯示設定：右下角浮動，操作方式與班級進度相同 */
 #display-tab {
-  position:fixed; right:0; bottom:18px; z-index:9801;
+  position:fixed; right:0; top:calc(34% + 84px); z-index:9801;
   padding:12px 9px;
   background:var(--ink); color:var(--gold);
   border:1px solid rgba(200,147,26,.35); border-right:none;
@@ -4015,7 +4015,7 @@ body.dark-mode .hd-table td[rowspan], body.dark-mode .jy-table td[rowspan] { bac
 }
 #display-tab:hover { background:#2c2218; }
 #display-panel {
-  position:fixed; right:-310px; bottom:18px; z-index:9800;
+  position:fixed; right:-310px; top:calc(34% + 84px); z-index:9800;
   width:290px; max-width:calc(100vw - 52px);
   background:var(--surface); color:var(--ink);
   border:1px solid var(--border); border-radius:14px;
@@ -4089,8 +4089,8 @@ body.dark-mode .hd-table td[rowspan], body.dark-mode .jy-table td[rowspan] { bac
 
 @media (max-width:820px) {
   #display-panel.open { right:46px; }
-  #display-panel { bottom:12px; width:270px; }
-  #display-tab { bottom:12px; padding:11px 7px; }
+  #display-panel { top:calc(30% + 72px); width:270px; }
+  #display-tab { top:calc(30% + 72px); padding:11px 7px; }
   #wk-fullscreen .wkfs-header { padding:7px 9px; min-height:42px; }
   #wk-fullscreen .wkfs-title { font-size:12px !important; min-width:0; }
   #wk-fullscreen .wkfs-close { margin-left:auto; }
@@ -4440,6 +4440,29 @@ body.dark-mode .wk-wa-top { background:var(--mk-paper,#1c1917); }
 .wk-wa-note { color:var(--mk-ink-soft,#6b5a42); font-family:"Iansui","Noto Sans TC",sans-serif; }
 </style>
 
+<style id="v46-work-answer-generic">
+/* ═══ v46：習作答案總覽通用版 ═══ */
+.wks-workanswers.wk-ao-page { box-sizing:border-box; padding:20px 28px 24px; overflow:auto; }
+.wk-ao-desc { margin:-2px 0 10px; font-family:"Iansui","Noto Sans TC",sans-serif; font-size:.82em; color:var(--mk-ink-soft,#6b5a42); }
+.wk-ao-sub { margin:0 0 8px; }
+.wk-ao-subhead { font-family:"Noto Serif TC","Zen Old Mincho",serif; font-weight:700; font-size:.92em; color:var(--mk-ink-deep,#211710); margin:2px 0 5px; }
+.wk-ao-chipline { display:flex; flex-wrap:wrap; gap:5px 10px; align-items:baseline; }
+.wk-ao-chip { display:inline-flex; align-items:baseline; gap:4px; white-space:nowrap; padding:3px 7px; border:1px solid rgba(202,187,150,.8); border-radius:4px; background:var(--mk-paper-warm,#f7f2e6); }
+.wk-ao-chip b { color:var(--mk-ink-soft,#6b5a42); font-weight:700; }
+.wk-ao-chip span { color:var(--L-mean,#2d7a4f); font-weight:800; }
+.wk-ao-choice-grid { display:flex; flex-wrap:wrap; gap:6px 8px; }
+.wk-ao-choice { appearance:none; display:inline-flex; align-items:center; gap:7px; min-width:70px; padding:6px 9px; border:1px solid rgba(202,187,150,.9); border-radius:5px; background:var(--mk-paper-warm,#f7f2e6); color:var(--mk-ink-deep,#211710); font:inherit; cursor:pointer; }
+.wk-ao-choice:hover { border-color:var(--L-gloss,#1f6fb2); transform:translateY(-1px); }
+.wk-ao-cqn { color:var(--mk-ink-soft,#6b5a42); font-weight:700; }
+.wk-ao-choice strong { color:var(--L-mean,#2d7a4f); font-family:"Noto Serif TC",serif; }
+.wk-ao-empty { color:var(--mk-ink-soft,#6b5a42); font-size:.82em; padding:4px 0; }
+@media (max-width:720px){
+  .wks-workanswers.wk-ao-page { padding:15px 16px 20px; }
+  .wk-ao-chipline,.wk-ao-choice-grid { gap:5px 6px; }
+  .wk-ao-chip { padding:3px 6px; }
+  .wk-ao-choice { min-width:62px; padding:5px 8px; }
+}
+</style>
 
 <style id="v36-ui-fix">
 /* ═══ v36：浮框尺寸修正＋習作答案入口／師說習作補回 ═══ */
@@ -4583,6 +4606,25 @@ body.dark-mode #tab-wenxue, body.dark-mode #wk-fullscreen { --L-rhet:#bd8d8d; --
 .wk-work-actions { display:none !important; }
 </style>
 
+
+<style id="v49-fix">
+.tp-pd{background:rgba(124,77,160,.085)!important;color:var(--L-supp,#7c4da0)!important;border-color:rgba(124,77,160,.52)!important}
+body.dark-mode .tp-pd{background:rgba(124,77,160,.16)!important}
+#wk-ink-layer.active,#wk-ink-layer.active *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent!important}
+#wk-ink-layer.active #wk-ink-canvas{touch-action:none!important;-webkit-touch-action:none!important;cursor:crosshair}
+.v49-first-bi-meaning{color:var(--L-mean,#2d7a4f)!important;border-bottom:2px solid var(--L-mean,#2d7a4f)!important;background:transparent!important;padding:0!important;box-shadow:none!important}
+</style>
+<script id="v49-ink-fix">
+(function(){
+function install(){
+var c=document.getElementById('wk-ink-canvas');if(!c||c.dataset.v49fix)return;c.dataset.v49fix='1';
+['touchstart','touchmove','touchend','touchcancel','pointerdown','pointermove','pointerup','pointercancel','contextmenu'].forEach(function(ev){c.addEventListener(ev,function(e){var l=document.getElementById('wk-ink-layer');if(l&&l.classList.contains('active')){if(e.cancelable)e.preventDefault();e.stopPropagation()}},{passive:false})});
+document.addEventListener('selectstart',function(e){var l=document.getElementById('wk-ink-layer');if(l&&l.classList.contains('active'))e.preventDefault()},true)
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install()
+})();
+</script>
+
 </head>
 <body>
 
@@ -4689,6 +4731,7 @@ body.dark-mode #tab-wenxue, body.dark-mode #wk-fullscreen { --L-rhet:#bd8d8d; --
     <button class="wkfs-close" onclick="wkCloseProj()">✕ 關閉</button>
   </div>
   <div class="wkfs-body" id="wkfs-body"></div>
+  <button type="button" id="wk-ink-tab" onclick="wkInkToggle()" aria-label="開啟或關閉畫記">畫記</button>
   <div id="wk-ink-layer" aria-label="投影畫記工具">
     <canvas id="wk-ink-canvas"></canvas>
     <div id="wk-ink-toolbar" role="toolbar" aria-label="畫記工具">
@@ -4699,6 +4742,8 @@ body.dark-mode #tab-wenxue, body.dark-mode #wk-fullscreen { --L-rhet:#bd8d8d; --
         <button type="button" class="wk-ink-color on" data-color="#c0392b" style="--ink-color:#c0392b" onclick="wkInkColor(this,'#c0392b')" aria-label="紅色"></button>
         <button type="button" class="wk-ink-color" data-color="#1f6fb2" style="--ink-color:#1f6fb2" onclick="wkInkColor(this,'#1f6fb2')" aria-label="藍色"></button>
         <button type="button" class="wk-ink-color" data-color="#2d7a4f" style="--ink-color:#2d7a4f" onclick="wkInkColor(this,'#2d7a4f')" aria-label="綠色"></button>
+        <button type="button" class="wk-ink-color" data-color="#7c4da0" style="--ink-color:#7c4da0" onclick="wkInkColor(this,'#7c4da0')" aria-label="紫色"></button>
+        <button type="button" class="wk-ink-color wk-ink-highlighter" data-color="rgba(255,235,59,.48)" style="--ink-color:rgba(255,235,59,.48)" onclick="wkInkHighlighter(this)" aria-label="黃色螢光筆"></button>
         <button type="button" class="wk-ink-size" onclick="wkInkSetSize(3)">細</button>
         <button type="button" class="wk-ink-size on" onclick="wkInkSetSize(5)">中</button>
         <button type="button" class="wk-ink-size" onclick="wkInkSetSize(8)">粗</button>
@@ -5669,6 +5714,22 @@ function asGo(i){
   const base = wkSlides.findIndex(function(s){ return s.type==='aq'; });
   if (base >= 0) wkGoto(base + parseInt(i));
 }
+/* 習作答案總覽：點題號跳回對應習作頁，並在該頁定位到指定題目。 */
+function wkWorkAnswerGo(slideIdx, qn){
+  const idx = parseInt(slideIdx, 10);
+  if (!Number.isFinite(idx)) return;
+  wkIdx = Math.max(0, Math.min(idx, wkSlides.length - 1));
+  const go = function(root){
+    if (!root) return;
+    const target = root.querySelector('.wq-item[data-qno="' + String(qn).replace(/"/g,'&quot;') + '"]');
+    if (target) target.scrollIntoView({behavior:'smooth', block:'center'});
+  };
+  wkRenderCurrent();
+  setTimeout(function(){
+    go(document.getElementById('wk-slide-area'));
+    go(document.getElementById('wkfs-body'));
+  }, 80);
+}
 function wqOpt(el){
   if (el.classList.contains('on')) return;
   el.classList.add('on');
@@ -6540,10 +6601,19 @@ function wkParseSlides(key) {
     }
     (ex.questions || []).forEach(q => { if (!usedQ[q.seg]) slides.push({ type:'question', seg:q.seg, q:q.q, a:q.a }); });
     (ex.exams || []).forEach(e => { if (!usedE[e.seg]) slides.push({ type:'exam', seg:e.seg, year:e.year, stem:e.stem, ans:e.ans, exp:e.exp }); });
-    /* ⑬ 習作：答案總覽只放在習作第一頁之前，不在每一頁重複提供連結。 */
+    /* ⑬ 習作：所有課別統一先放一張「答案總覽」，後面才進入各習作頁。 */
     if (data.workbook) {
-      if (key === '世說新語選') slides.push({ type:'work_answers', workbook:data.workbook, first:true, overview:true });
-      data.workbook.sections.forEach((s, si) => slides.push({ type:'work', sec:s, first: si===0, title:data.workbook.title }));
+      const wa = { type:'work_answers', workbook:data.workbook, first:true, overview:true, targets:[] };
+      slides.push(wa);
+      (data.workbook.sections || []).forEach((sec, si) => {
+        const targetIdx = slides.length;
+        slides.push({ type:'work', sec:sec, first: si===0, title:data.workbook.title });
+        if (sec.kind === 'quiz' || sec.kind === 'read') {
+          (sec.items || []).forEach(function(it){
+            wa.targets.push({ slideIdx: targetIdx, qn: String(it.n == null ? '' : it.n) });
+          });
+        }
+      });
     }
     /* ⑭ A卷 */
     if (data.aHand) slides.push({ type:'ahand', data:data.aHand });
@@ -7488,7 +7558,7 @@ function wkRenderSlideHTML(slide) {
             '<div class="wq-oh"><span class="wq-ok">' + o[0] + '</span>' + o[1] + '</div>' +
             (o[2] ? '<div class="wq-od">' + o[2] + '</div>' : '') + '</div>';
         }).join('');
-        return '<div class="wq-item" data-ans="' + it.ans + '" data-tot="' + it.opts.length + '">' +
+        return '<div class="wq-item" data-qno="' + String(it.n == null ? '' : it.n).replace(/"/g,'&quot;') + '" data-ans="' + it.ans + '" data-tot="' + it.opts.length + '">' +
           '<div class="wk-q"><span class="wk-qn">' + it.n + '</span>' + it.q + '</div>' +
           '<div class="wq-opts">' + opts + '</div>' +
           '<button type="button" class="wq-reveal-btn" onclick="wkWorkReveal(this,event)">直接顯示答案</button>' +
@@ -7508,65 +7578,139 @@ function wkRenderSlideHTML(slide) {
       '<div class="wk-body">' + body + '</div></div>';
   }
 
-  /* ── 習作答案總覽：單頁緊湊版（目前先依〈世說新語選〉製作） ── */
+  /* ── 習作答案總覽：通用生成版 ── */
   if (slide.type === 'work_answers') {
     const W = slide.workbook || {};
     const S = W.sections || [];
-    const tableAnswers = function(sec) {
-      const vals = [];
-      (sec.rows || []).forEach(function(r){
-        (r || []).forEach(function(c){
-          const box=document.createElement('div'); box.innerHTML=String(c==null?'':c);
-          box.querySelectorAll('.wk-tans .wk-tval').forEach(function(v){ vals.push(v.textContent.trim()); });
+    const targets = slide.targets || [];
+    const roman = {'壹':'基礎認知站','貳':'進階實力站','參':'挑戰加分站','肆':'補充題組','伍':'其他練習'};
+
+    function escAttr(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function htmlText(v){ return String(v == null ? '' : v); }
+    function qNumFromRow(r, idx){
+      for (let j=idx-1;j>=0;j--){
+        const t=String(r[j] == null ? '' : r[j]).replace(/<[^>]+>/g,'').trim();
+        const m=t.match(/^(?:[（(]\s*)?(\d+)(?:\s*[）).、:]?)?$/);
+        if(m) return m[1];
+        const m2=t.match(/^[（(]\s*(\d+)\s+/);
+        if(m2) return m2[1];
+      }
+      const all= r.map(function(c){ return String(c==null?'':c).replace(/<[^>]+>/g,'').trim(); });
+      const first=all.find(function(t){ return /^\d+$/.test(t); });
+      return first || '';
+    }
+    function pullAnswerChips(sec){
+      const out=[];
+      (sec.rows||[]).forEach(function(r,ri){
+        (r||[]).forEach(function(c,ci){
+          const raw=htmlText(c);
+          const holder=document.createElement('div'); holder.innerHTML=raw;
+          holder.querySelectorAll('.wk-tans .wk-tval').forEach(function(v){
+            let q=qNumFromRow(r,ci);
+            if(!q){
+              const txt=holder.textContent||''; const m=txt.match(/[（(]\s*(\d+)\s*/); if(m) q=m[1];
+            }
+            out.push({q:q || String(out.length+1), a:v.textContent.trim()});
+          });
+          holder.querySelectorAll('.jy-blank .jy-blank-ans').forEach(function(v){
+            let q=qNumFromRow(r,ci);
+            out.push({q:q || String(out.length+1), a:v.textContent.trim()});
+          });
+          /* 現有少數習作直接用「（1 <b>答案</b>）」嵌在內容中，亦一併抽取。 */
+          let m; const re=/[（(]\s*(\d+)\s*<b[^>]*>([\s\S]*?)<\/b>\s*[）)]/g;
+          while((m=re.exec(raw))!==null){
+            const box=document.createElement('div'); box.innerHTML=m[2];
+            out.push({q:m[1], a:box.textContent.trim()});
+          }
         });
       });
-      return vals;
-    };
-    const inlineAns = function(vals) {
-      return vals.map(function(v,i){ return '<span class="wk-ao-item"><b>' + (i+1) + '.</b><span>' + v + '</span></span>'; }).join(' ');
-    };
-    const group = function(cls, label, icon, body) {
-      return '<section class="wk-ao-group ' + cls + '"><div class="wk-ao-label"><span class="wk-ao-icon">' + icon + '</span><span>' + label + '</span></div>' + body + '</section>';
-    };
+      if(out.length) return out;
+      /* 沒有隱藏答案標記時，依表頭自動找「答案型」欄位。 */
+      const cols=(sec.cols||[]).map(function(x){return String(x==null?'':x).replace(/<[^>]+>/g,'').trim();});
+      const ansCols=[];
+      cols.forEach(function(h,ci){
+        if(/^(答案|字音|字形|詞義|詞義\/解釋|注音|國字)$/.test(h)) ansCols.push(ci);
+      });
+      (sec.rows||[]).forEach(function(r){
+        ansCols.forEach(function(ci){
+          if(r[ci]==null || r[ci]==='') return;
+          const val=String(r[ci]).replace(/<[^>]+>/g,'').trim();
+          if(!val || /^[-—]$/.test(val)) return;
+          let q=qNumFromRow(r,ci);
+          /* 「答案」欄常與題號直接成對出現。 */
+          if(!q){
+            for(let j=0;j<r.length;j++){
+              const t=String(r[j]==null?'':r[j]).replace(/<[^>]+>/g,'').trim();
+              if(/^\d+$/.test(t)){ q=t; break; }
+            }
+          }
+          out.push({q:q || String(out.length+1), a:val});
+        });
+      });
+      return out;
+    }
 
-    /* 壹 基礎認知站 */
-    const base = S.slice(0,5);
-    let baseBody = '';
-    base.forEach(function(sec, idx){
-      const sub = (sec.head || '').replace(/^壹\s*基礎認知站\s*[　 ]*/, '');
-      if (idx === 3) {
-        /* 依使用者提供的答案總覽樣式：這一題只列 6 個需要填答的空格。 */
-        baseBody += '<div class="wk-ao-line"><b>四、</b><span>① 筆記　② 志怪　③ 志人　④ 傳奇　⑤ 章回　⑥ 《紅樓夢》</span></div>';
-      } else {
-        const vals = tableAnswers(sec);
-        baseBody += '<div class="wk-ao-line"><b>' + (idx+1) + '、</b><span>' + inlineAns(vals) + '</span></div>';
+    function chipLine(sec){
+      const vals=pullAnswerChips(sec);
+      if(!vals.length) return '<div class="wk-ao-empty">本區沒有可自動擷取的填答欄位。</div>';
+      return '<div class="wk-ao-chipline">' + vals.map(function(x){
+        return '<span class="wk-ao-chip"><b>' + escAttr(x.q) + '</b><span>' + x.a + '</span></span>';
+      }).join('') + '</div>';
+    }
+
+    function majorOf(head){
+      const m=String(head||'').match(/^\s*([壹貳參肆伍陸柒捌拾])\s+/);
+      return m ? m[1] : '';
+    }
+    function cleanHead(head){
+      return String(head||'').replace(/^\s*[壹貳參肆伍陸柒捌拾]\s+/, '').trim();
+    }
+    function choiceCards(sec, sectionIndex){
+      const items=sec.items||[];
+      if(!items.length) return '<div class="wk-ao-empty">本區沒有題目。</div>';
+      return '<div class="wk-ao-choice-grid">' + items.map(function(it){
+        let target=null;
+        for(let ti=0;ti<targets.length;ti++){
+          if(targets[ti].slideIdx != null && String(targets[ti].qn)===String(it.n)){ target=targets[ti]; break; }
+        }
+        /* 同題號在不同 section 重複時，以最近的 section 位置為優先。 */
+        const slideIdx=target ? target.slideIdx : '';
+        const fn=slideIdx!=='' ? ' onclick="wkWorkAnswerGo(' + slideIdx + ',\'' + String(it.n).replace(/'/g,"\\'") + '\')"' : '';
+        return '<button type="button" class="wk-ao-choice"' + fn + '><span class="wk-ao-cqn">' + escAttr(it.n) + '</span><strong>' + escAttr(it.ans) + '</strong></button>';
+      }).join('') + '</div>';
+    }
+
+    /* 先依主要大題分組，不依賴固定 section 索引。 */
+    const groups=[]; let current=null;
+    S.forEach(function(sec,si){
+      const m=majorOf(sec.head);
+      if(m){
+        current={roman:m, sections:[]}; groups.push(current);
       }
+      if(!current){ current={roman:'', sections:[]}; groups.push(current); }
+      current.sections.push({sec:sec, index:si});
     });
-    /* 五、綜合理解：選擇題直接列答案。 */
-    const q5 = S[4] && (S[4].items || []);
-    baseBody += '<div class="wk-ao-line"><b>五、</b><span>' + q5.map(function(it){ return '<span class="wk-ao-item"><b>' + it.n + '.</b><span>(' + it.ans + ')</span></span>'; }).join(' ') + '</span></div>';
 
-    /* 貳 選擇實力站（把兩組閱讀測驗合併成 1～6 題） */
-    const r1 = S[5] ? (S[5].items || []) : [];
-    const r2 = S[6] ? (S[6].items || []) : [];
-    const readAns = r1.concat(r2);
-    let selBody = '<div class="wk-ao-line"><b>一、閱讀測驗</b><span>' + readAns.map(function(it,i){ return '<span class="wk-ao-item"><b>' + (i+1) + '.</b><span>(' + it.ans + ')</span></span>'; }).join(' ') + '</span></div>';
-
-    /* 趣味文學體驗 */
-    const fun = S[7] ? (S[7].items || []) : [];
-    selBody += '<div class="wk-ao-line"><b>二、趣味文學體驗</b><span>' + fun.map(function(it){ return '<span class="wk-ao-item"><b>' + it.n + '.</b><span>' + it.ans + '</span></span>'; }).join(' ') + '</span></div>';
-
-    /* 參 挑戰加分站 */
-    const chal = S[8] ? (S[8].items || []) : [];
-    let challengeBody = '<div class="wk-ao-line"><span>' + chal.map(function(it){ return '<span class="wk-ao-item"><b>' + it.n + '.</b><span>' + it.ans + '</span></span>'; }).join(' ') + '</span></div>';
+    const groupHtml=groups.map(function(g){
+      const label=roman[g.roman] || (g.roman ? g.roman : '習作內容');
+      const body=g.sections.map(function(x){
+        const sec=x.sec;
+        const head=cleanHead(sec.head) || sec.title || '';
+        if(sec.kind==='quiz' || sec.kind==='read'){
+          return '<div class="wk-ao-sub"><div class="wk-ao-subhead">' + head + '</div>' + choiceCards(sec,x.index) + '</div>';
+        }
+        if(sec.kind==='table'){
+          return '<div class="wk-ao-sub"><div class="wk-ao-subhead">' + head + '</div>' + chipLine(sec) + '</div>';
+        }
+        return '';
+      }).join('');
+      return '<section class="wk-ao-group wk-ao-generic"><div class="wk-ao-label"><span class="wk-ao-icon">' + (g.roman || '答') + '</span><span>' + label + '</span></div>' + body + '</section>';
+    }).join('');
 
     return '<div class="wk-slide wks-workanswers wk-ao-page">' +
-      '<div class="wk-ao-title"><span class="wk-ao-kicker">第二課</span><span>世說新語選</span></div>' +
-      group('wk-ao-base','基礎認知站','壹',baseBody) +
-      group('wk-ao-sel','選擇實力站','選', '<div class="wk-ao-line"><b>一、閱讀測驗</b><span>' + readAns.map(function(it,i){ return '<span class="wk-ao-item"><b>' + (i+1) + '.</b><span>(' + it.ans + ')</span></span>'; }).join(' ') + '</span></div>') +
-      group('wk-ao-fun','趣味文學體驗','趣', fun.length ? '<div class="wk-ao-line"><b>二、</b><span>' + fun.map(function(it){ return '<span class="wk-ao-item"><b>' + it.n + '.</b><span>' + it.ans + '</span></span>'; }).join(' ') + '</span></div>' : '') +
-      group('wk-ao-chal','挑戰加分站','挑',challengeBody) +
-      '<div class="wk-ao-tip">答案總覽｜選擇題不必逐題點開，直接對答案；需要時再回習作頁看解析。</div>' +
+      '<div class="wk-ao-title"><span class="wk-ao-kicker">習作Ａ</span><span>' + (W.title||'') + '｜答案總覽</span></div>' +
+      '<div class="wk-ao-desc">填空類直接列答案；選擇題點題號可跳回該題檢討，答案不必再點一次。</div>' +
+      groupHtml +
       '</div>';
   }
 
@@ -7946,6 +8090,8 @@ function wkInkToggle(){
   const btn = document.getElementById('wk-ink-toggle');
   if (layer) layer.classList.toggle('active', st.active);
   if (btn) { btn.classList.toggle('on', st.active); btn.textContent = st.active ? '✎ 關閉畫記' : '✎ 畫記'; }
+  const tab = document.getElementById('wk-ink-tab');
+  if (tab) tab.classList.toggle('on', st.active);
   if (!st.active) st.drawing = false;
 }
 function wkInkColor(btn, color){
@@ -7953,6 +8099,14 @@ function wkInkColor(btn, color){
   st.color = color;
   document.querySelectorAll('.wk-ink-color').forEach(function(x){x.classList.remove('on');});
   if (btn) btn.classList.add('on');
+}
+function wkInkHighlighter(btn){
+  const st = window.wkInkState;
+  st.color = 'rgba(255,235,59,.48)';
+  st.size = 16;
+  document.querySelectorAll('.wk-ink-color').forEach(function(x){x.classList.remove('on');});
+  if (btn) btn.classList.add('on');
+  document.querySelectorAll('.wk-ink-size').forEach(function(x){x.classList.remove('on');});
 }
 function wkInkSetSize(size){
   window.wkInkState.size = size;
@@ -8363,5 +8517,27 @@ body.dark-mode #tab-wenxue, body.dark-mode #wk-fullscreen {
   margin:0 !important;
 }
 </style>
+
+<script id="v49-first-meaning-fix">
+(function(){
+function fix(){
+document.querySelectorAll('#tab-wenxue,#wk-fullscreen').forEach(function(root){
+if(root.dataset.v49fixed)return;
+var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;
+while(n=w.nextNode()){
+var i=n.nodeValue.indexOf('古之學者必有師');
+if(i<0)continue;
+var f=document.createDocumentFragment();
+f.appendChild(document.createTextNode(n.nodeValue.slice(0,i+4)));
+var s=document.createElement('span');s.className='v49-first-bi-meaning';s.textContent='必';f.appendChild(s);
+f.appendChild(document.createTextNode(n.nodeValue.slice(i+5)));
+n.parentNode.replaceChild(f,n);root.dataset.v49fixed='1';break
+}
+})
+}
+document.addEventListener('DOMContentLoaded',function(){fix();var o=new MutationObserver(fix);o.observe(document.body,{childList:true,subtree:true});setTimeout(function(){o.disconnect()},5000)})
+})();
+</script>
+
 </body>
 </html>
