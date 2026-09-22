@@ -7239,18 +7239,23 @@ function wkRenderSlideHTML(slide) {
   if (slide.type === 'textpage') {
     const P = slide.page;
     const CIR = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳','㉑','㉒','㉓','㉔','㉕','㉖','㉗','㉘','㉙','㉚','㉛','㉜','㉝','㉞','㉟','㊱','㊲','㊳','㊴','㊵','㊶','㊷','㊸','㊹','㊺','㊻','㊼','㊽','㊾','㊿'];
-    /* Phase2：直式注音（逐字元堆疊，非旋轉橫字串）。kind: book(黑)/note(豬肝紅) */
+    /* Phase2：直式注音（逐字元堆疊，非旋轉橫字串）。聲調獨立定位，避免落在整串最下方。 */
     function vertZhuyin(zy, kind){
-      var cs = Array.from(String(zy || ''));
+      var raw = String(zy || '');
+      var toneMatch = raw.match(/[\u02C7\u02C9\u02CA\u02CB\u02D9]/);
+      var tone = toneMatch ? toneMatch[0] : '';
+      var cs = Array.from(raw.replace(/[\u02C7\u02C9\u02CA\u02CB\u02D9]/g, ''));
       if (!cs.length) return '';
       return '<span class="tp-ruby tp-ruby-' + kind + '" aria-hidden="true">' +
-             cs.map(function(c){ return '<span>' + c + '</span>'; }).join('') + '</span>';
+             '<span class="tp-ruby-col">' + cs.map(function(c){ return '<span class="tp-ruby-char">' + c + '</span>'; }).join('') + '</span>' +
+             (tone ? '<span class="tp-ruby-tone ' + (tone === '\u02D9' ? 'tp-ruby-tone-light' : '') + '">' + tone + '</span>' : '') +
+             '</span>';
     }
     var ZY = '[\\u3105-\\u312F\\u02C7\\u02C9\\u02CA\\u02CB\\u02D9]';
     function parse(t) {
       /* 先解析課本圈號，才能正確處理「生{n:6|乎}吾前」這種巢狀標記；
          再解析字義／補充／字音，避免內層 } 提前截斷外層。 */
-      t = t.replace(/\{n:(\d+)\|([^}]*)\}/g, function(m, num, word) {
+      t = t.replace(/\{n:(\d+)\|((?:\{z:[^}]*\}|[^}])*)\}/g, function(m, num, word) {
         const g = parseInt(num) - 1;
         const k = g - ((P.noteStart || 1) - 1);
         var wordHtml = word;
@@ -7265,7 +7270,9 @@ function wkRenderSlideHTML(slide) {
             while ((mm = re.exec(noteText)) !== null) {
               var ch = mm[1], zy = mm[2];
               if (applied[ch]) continue; applied[ch] = 1;
-              if (wordHtml.indexOf('{z:' + ch) >= 0) continue; /* 10-2：該字已有課本注音({z})，不再加注釋注音，避免重複/誤標 */
+              /* 僅檢查這一個 {n} anchor 內、同一字元位置的 {z}；不可跨段或全頁搜尋。 */
+              var zAtSameAnchor = new RegExp('\\{z:' + ch.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '(?:\\||\\})').test(wordHtml);
+              if (zAtSameAnchor) continue; /* 同一 anchor 已有課本注音({z})，不再加註釋注音。 */
               var at = wordHtml.indexOf(ch);
               if (at >= 0) wordHtml = wordHtml.slice(0, at + ch.length) + vertZhuyin(zy, 'note') + wordHtml.slice(at + ch.length);
             }
@@ -7275,8 +7282,12 @@ function wkRenderSlideHTML(slide) {
                '<sup class="tp-num">' + (CIR[g] || num) + '</sup></span>';
       });
       t = t.replace(/\{g:([^|]*)\|([^}]*)\}/g, function(m, w, d) {
+        /* 若本課有此字的字義辨析／形音義專頁，於字義浮窗內加「完整辨析 →」連結，可跳頁並一鍵回課文。 */
+        var plainW = String(w).replace(/<[^>]+>/g, '');
+        var gMore = (typeof wkFindExplainIdx === 'function' && wkFindExplainIdx('char', plainW) >= 0)
+          ? '<a class="tp-more" onclick="wkJumpExplain(event,\'char\',\'' + plainW.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">完整辨析 →</a>' : '';
         return '<span class="tp-g" onclick="tpTogglePop(this,event)">' + w +
-               '<span class="tp-gd" onclick="event.stopPropagation()">' + d + '</span></span>';
+               '<span class="tp-gd" onclick="event.stopPropagation()">' + d + gMore + '</span></span>';
       });
       t = t.replace(/\{p:([^|]*)\|([^}]*)\}/g, function(m, w, d) {
         const plainW = String(w).replace(/<[^>]+>/g, '');
@@ -7289,8 +7300,11 @@ function wkRenderSlideHTML(slide) {
         /* Phase2 課本注音：抽出開頭的注音（含聲調），黑色直式標於字右；其餘（通假/說明）留 popup。 */
         var zm = String(z).match(new RegExp('^(' + ZY + '+)([\\s\\S]*)$'));
         var ruby = (zm && zm[1]) ? vertZhuyin(zm[1], 'book') : '';
+        /* 注音已在課文旁直排呈現；浮窗只保留注音以外的通假／說明，避免與直式注音重複。 */
+        var popup = (zm ? String(zm[2] || '') : String(z)).replace(/^[\s，,、：:；;]+/, '');
+        if (!popup.trim()) return '<span class="tp-z tp-z-inline">' + w + ruby + '</span>';
         return '<span class="tp-z" onclick="tpTogglePop(this,event)" aria-label="切換注音或通假">' + w + ruby +
-               '<span class="tp-zd" onclick="event.stopPropagation()">' + z + '</span></span>';
+               '<span class="tp-zd" onclick="event.stopPropagation()">' + popup + '</span></span>';
       });
       return t;
     }
@@ -7633,7 +7647,10 @@ function wkRenderSlideHTML(slide) {
         return state.rhetLayers.indexOf(a)-state.rhetLayers.indexOf(b);
       }).map(function(r) {
         const tog = r.matched ? ' tp-item-tog" data-lid="' + r.id + '" onclick="tpLayerToggle(\'' + r.id + '\',this)"' : ' tp-item-static"';
-        return '<div class="tp-rhet' + tog + '><span class="tp-rt">修辭</span><b>' + r.name + '</b>　' + r.desc + '</div>';
+        /* 若本課有對應的修辭說明專頁，於此修辭條末端加「詳解 →」連結，點了跳到該頁並可一鍵回課文。 */
+        const rMore = (typeof wkFindExplainIdx === 'function' && wkFindExplainIdx('rhet', r.name) >= 0)
+          ? '<a class="tp-more" onclick="wkJumpExplain(event,\'rhet\',\'' + String(r.name).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">詳解 →</a>' : '';
+        return '<div class="tp-rhet' + tog + '><span class="tp-rt">修辭</span><b>' + r.name + '</b>　' + r.desc + rMore + '</div>';
       }).join('');
 
       const st = state.styleItems.map(function(r) {
@@ -8138,6 +8155,10 @@ function wkRenderSlideHTML(slide) {
 /* ── 更新畫面 ── */
 function wkRenderCurrent() {
   if (!wkSlides.length) return;
+  /* 換頁時清空修辭／句意圖層的開啟順序：圖層 id（r0_0、m0_0…）每頁重複使用，
+     若沿用上一頁殘留的順序，會使 tpLayerToggle 的加入/移除判斷反轉，造成
+     「說明框外框亮但課文未上色」或「未點按鈕卻已上色」的狀態脫節。 */
+  window.tpLayerOrder = [];
   const html = wkRenderSlideHTML(wkSlides[wkIdx]);
   const counter = `${wkIdx+1} / ${wkSlides.length}`;
 
@@ -8182,6 +8203,9 @@ function wkRenderCurrent() {
       });
     }
   }
+  /* 說明頁若是從課文跳來，注入「⤺ 回課文」；作者/題解頁注入分層與填空。 */
+  if (typeof wkInjectReturnBtn === 'function') wkInjectReturnBtn();
+  if (typeof wkEnhanceInfoLayers === 'function') wkEnhanceInfoLayers();
 }
 
 /* ── 選擇課文 ── */
@@ -8428,6 +8452,160 @@ function jyToggleAll(btn) {
   const anyHidden = Array.from(blanks).some(b => !b.classList.contains('show'));
   blanks.forEach(b => b.classList.toggle('show', anyHidden));
   btn.textContent = anyHidden ? '隱藏全部答案' : '顯示全部答案';
+}
+
+/* ═══════════ 課文 ↔ 說明頁 導覽（跳說明頁後一鍵回課文原句） ═══════════ */
+window.wkReturnTo = null;
+/* 取修辭／字的「基底名稱」：去掉括號補述與空白，方便課文標記與說明頁互相對應。 */
+function wkBaseName(s){ return String(s == null ? '' : s).replace(/[（(【].*$/, '').replace(/[\s　]/g, '').trim(); }
+/* 依修辭名稱或字，在目前課次的投影片中找到對應說明頁的索引；找不到回 -1。 */
+function wkFindExplainIdx(kind, keyword){
+  if (!wkSlides || !wkSlides.length) return -1;
+  const kw = wkBaseName(keyword);
+  if (!kw) return -1;
+  for (let i = 0; i < wkSlides.length; i++){
+    const s = wkSlides[i];
+    if (kind === 'rhet' && (s.type === 'keyrhet' || s.type === 'rhet_table' || s.type === 'rhet_text')){
+      const nm = wkBaseName(s.name);
+      if (nm && (nm === kw || nm.indexOf(kw) >= 0 || kw.indexOf(nm) >= 0)) return i;
+    }
+    if (kind === 'char' && s.type === 'charbian'){
+      const nm = wkBaseName(s.name);
+      if (nm && (nm === kw || nm.indexOf(kw) >= 0 || kw.indexOf(nm) >= 0)) return i;
+    }
+  }
+  /* 字義找不到專頁時，退而找含此字的互動形音義辨析頁。 */
+  if (kind === 'char'){
+    for (let i = 0; i < wkSlides.length; i++){
+      const s = wkSlides[i];
+      if (s.type === 'charquiz'){
+        try { if (JSON.stringify(s.data || '').indexOf(keyword) >= 0) return i; } catch(e){}
+      }
+    }
+  }
+  return -1;
+}
+/* 從課文點連結跳到說明頁，並記住來源課文頁與被點的句子（data-li）。 */
+function wkJumpExplain(ev, kind, keyword){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const idx = wkFindExplainIdx(kind, keyword);
+  if (idx < 0) return;
+  let li = null;
+  try { const ln = ev && ev.target && ev.target.closest ? ev.target.closest('.tp-line') : null; if (ln) li = ln.getAttribute('data-li'); } catch(e){}
+  window.wkReturnTo = { idx: wkIdx, li: li };
+  wkGoto(idx);
+}
+/* 一鍵回到原本的課文頁，並捲動、短暫高亮原句。 */
+function wkReturnToText(){
+  const rt = window.wkReturnTo;
+  if (!rt) return;
+  window.wkReturnTo = null;
+  wkGoto(rt.idx);
+  if (rt.li != null){
+    setTimeout(function(){
+      const el = document.querySelector('#wk-slide-area .tp-line[data-li="' + rt.li + '"]') ||
+                 document.querySelector('.tp-line[data-li="' + rt.li + '"]');
+      if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('tp-line-flash'); setTimeout(function(){ el.classList.remove('tp-line-flash'); }, 1700); }
+    }, 100);
+  }
+}
+/* 在說明頁頂端注入「⤺ 回課文」按鈕；僅當是從課文跳來時才出現。 */
+function wkInjectReturnBtn(){
+  if (!window.wkReturnTo) return;
+  const EXPL = ['wks-keyrhet','wks-charbian','wks-charquiz','wks-rhet-table'];
+  document.querySelectorAll('#wk-slide-area .wk-slide, #wkfs-body .wk-slide').forEach(function(sl){
+    if (!EXPL.some(function(c){ return sl.classList.contains(c); })) return;
+    if (sl.querySelector('.wk-return-text')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'wk-return-text'; b.textContent = '⤺ 回課文';
+    b.setAttribute('onclick', 'wkReturnToText()');
+    sl.insertBefore(b, sl.firstChild);
+  });
+}
+
+/* ═══════════ 作者／題解：同一頁分層（課本正文 / 補充 / 填空練習） ═══════════ */
+/* 各資訊頁（依完整標籤精確對應）要併入的補充講義頁標題（子字串比對）。僅師說試作。 */
+const WK_FILL_MAP = {
+  '師說': {
+    '作者·課本': ['作者與題解', '古文運動發展簡史', '韓愈與柳宗元比較'],
+    '題解·課本': ['作者與題解', '文體簡介'],
+    '題解·文體': ['文體簡介'],
+    '作者·補充': ['駢文流變', '駢文、散文之比較']
+  }
+};
+/* 將一個補充講義區塊渲染成 HTML（表格保留原本的 jy-blank 填空）。 */
+function wkRenderFillBlock(b){
+  if (b[0] === 'table'){
+    const rows = b[2];
+    const colCount = Math.max(1, ...rows.map(function(r){ return r.length; }));
+    const cls = 'jy-table jy-cols-' + Math.min(colCount, 6);
+    const trs = rows.map(function(r){
+      if (r.length === 1) return '<tr><th class="jy-th-full" colspan="' + colCount + '">' + r[0] + '</th></tr>';
+      return '<tr><th class="jy-th">' + r[0] + '</th>' + r.slice(1).map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    return '<div class="hd-tw"><table class="' + cls + ' hd-table">' + trs + '</table></div>';
+  }
+  const k = b[1], t = b[2];
+  if (k === 'sub')  return '<div class="hd-sub">' + t + '</div>';
+  if (k === 'mj')   return '<div class="hd-mj">' + t + '</div>';
+  if (k === 'note') return '<div class="hd-note">' + t + '</div>';
+  return '<div class="hd-para">' + t + '</div>';
+}
+/* 依資訊頁標籤，組出對應補充講義的「填空練習」面板 HTML；無對應則回空字串。 */
+function wkBuildFillHTML(bookKey, label){
+  const map = WK_FILL_MAP[bookKey]; if (!map) return '';
+  const wanted = map[label]; if (!wanted || !wanted.length) return '';
+  const data = (TEXTBOOK[bookKey] || {}).handoutV2 || []; if (!data.length) return '';
+  const seen = {};
+  const parts = [];
+  data.forEach(function(p){
+    const hit = wanted.some(function(w){ return (p.title || '').indexOf(w) >= 0; });
+    if (!hit || seen[p.title]) return;
+    seen[p.title] = 1;
+    const body = (p.blocks || []).map(wkRenderFillBlock).join('');
+    parts.push('<div class="wk-fill-sec"><div class="hd-sub">' + p.title +
+      (p.page ? '　<span style="font-weight:400;opacity:.65">補充講義 ' + p.page + '</span>' : '') +
+      '</div>' + body + '</div>');
+  });
+  if (!parts.length) return '';
+  return '<div class="wk-fill-panel" hidden>' +
+    '<div class="wk-fill-h"><span class="wk-fill-title">✎ 補充講義 · 對應填空</span>' +
+    '<button class="jy-toggle-all" onclick="jyToggleAll(this)">顯示全部答案</button>' +
+    '<span style="font-size:13px;opacity:.7">點空格逐一顯示；右側按鈕一次全開／全隱</span></div>' +
+    parts.join('') + '</div>';
+}
+/* 在師說作者／題解頁注入「課本正文 / 補充 / 填空練習」分層切換與填空面板。 */
+function wkEnhanceInfoLayers(){
+  document.querySelectorAll('#wk-slide-area .wks-shishuo-info, #wkfs-body .wks-shishuo-info').forEach(function(slide){
+    if (slide.querySelector('.wk-layerbar')) return;
+    const badge = slide.querySelector('.wks-section-badge');
+    const label = badge ? badge.textContent.trim() : '';
+    const map = WK_FILL_MAP['師說'] || {};
+    const hasSup = !!slide.querySelector('.sp-w, .sp-box');
+    const fillHTML = wkBuildFillHTML('師說', label);
+    /* 僅處理有對應填空、或本身有補充詞的作者／題解頁；其餘頁面維持原樣。 */
+    if (!(label in map) && !fillHTML) return;
+    const body = slide.querySelector('.wks-info-body');
+    const wrap = slide.querySelector('.wks-info-wrap');
+    if (!body || !wrap) return;
+    const bar = document.createElement('div');
+    bar.className = 'wk-layerbar';
+    bar.innerHTML =
+      '<button type="button" class="wk-layer-btn on" data-layer="book">課本正文</button>' +
+      (hasSup ? '<button type="button" class="wk-layer-btn" data-layer="sup">補充</button>' : '') +
+      (fillHTML ? '<button type="button" class="wk-layer-btn" data-layer="fill">填空練習</button>' : '');
+    wrap.parentElement.insertBefore(bar, wrap);
+    if (fillHTML){ const holder = document.createElement('div'); holder.innerHTML = fillHTML; if (holder.firstChild) wrap.appendChild(holder.firstChild); }
+    bar.addEventListener('click', function(ev){
+      const btn = ev.target.closest('.wk-layer-btn'); if (!btn) return;
+      const layer = btn.getAttribute('data-layer');
+      if (layer === 'book'){ btn.classList.toggle('on'); body.style.display = btn.classList.contains('on') ? '' : 'none'; }
+      else if (layer === 'sup'){ btn.classList.toggle('on'); const on = btn.classList.contains('on');
+        slide.querySelectorAll('.sp-box').forEach(function(x){ x.classList.toggle('show', on); });
+        slide.querySelectorAll('.sp-w').forEach(function(x){ x.classList.toggle('on', on); }); }
+      else if (layer === 'fill'){ btn.classList.toggle('on'); const p = slide.querySelector('.wk-fill-panel'); if (p) p.hidden = !btn.classList.contains('on'); }
+    });
+  });
 }
 
 /* ── 全螢幕字級控制 ── */
@@ -8971,13 +9149,22 @@ body.ink-on{ }
 })();
 </script>
 <style id="v51-phase2-css">
-/* ===== Phase2：課本／注釋 直式注音（真正逐字元堆疊，非旋轉）===== */
-.tp-ruby{ display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
-  vertical-align:middle; line-height:1; font-size:.36em; font-weight:700; margin:0 .5px 0 1px;
-  font-family:"Noto Sans TC",sans-serif; letter-spacing:0; white-space:nowrap; }
-.tp-ruby>span{ display:block; line-height:1.04; }
+/* ===== Phase2：課本／注釋 直式注音（符號直排、聲調獨立定位；不使用旋轉）===== */
+.tp-ruby{ display:inline-block; position:relative; width:1.06em; height:1em;
+  vertical-align:.32em; line-height:1; font-size:.40em; font-weight:700; margin:0 .14em 0 .03em;
+  font-family:"Noto Sans TC",sans-serif; letter-spacing:0; white-space:nowrap; pointer-events:none; }
+.tp-ruby-col{ position:absolute; left:0; top:50%; display:flex; flex-direction:column; align-items:center;
+  transform:translateY(-50%); }
+.tp-ruby-char{ display:block; line-height:1.04; }
+.tp-ruby-tone{ position:absolute; left:.73em; top:0; display:block; line-height:1; }
+.tp-ruby-tone-light{ top:-1.05em; }
 .tp-ruby-book{ color:#111; }
 .tp-ruby-note{ color:#7a2e2e; }
+/* {n} 專用：保留原文字大小，為深紅直式注音與註號保留獨立的右側空間。 */
+.tp-n > .tp-ruby-note{ width:1.48em; margin-left:.24em; margin-right:.32em; }
+.tp-n > .tp-ruby-note .tp-ruby-col{ left:.16em; }
+.tp-n > .tp-ruby-note .tp-ruby-tone{ left:1.02em; }
+.tp-n:has(> .tp-ruby-note) > .tp-num{ position:relative; left:.18em; top:-.20em; margin-left:0; }
 body.dark-mode .tp-ruby-book{ color:#f0ece0; }
 body.dark-mode .tp-ruby-note{ color:#e2a6a6; }
 /* ===== Phase2：作者／題解 首行縮排（僅師說）===== */
@@ -8992,6 +9179,38 @@ body.dark-mode .tp-ruby-note{ color:#e2a6a6; }
 body.dark-mode .wks-asheet .as-unit{ background:var(--mk-paper-warm,#221d18); }
 .wks-asheet .as-grp{ display:inline-flex; flex-wrap:nowrap; gap:8px; padding:5px 8px;
   border:1px dashed var(--L-supp,#7c4da0); border-radius:7px; break-inside:avoid; }
+</style>
+
+<style id="v53-feature-css">
+/* ── 課文 → 說明頁 的「詳解／完整辨析」連結 ── */
+.tp-more{ display:inline-block; margin-left:.5em; padding:0 .5em; cursor:pointer;
+  font-size:.82em; font-weight:700; white-space:nowrap; border-radius:999px;
+  color:var(--L-gloss,#1f6fb2); border:1px solid var(--L-gloss,#1f6fb2);
+  background:rgba(31,111,178,.08); text-decoration:none; }
+.tp-more:hover{ background:var(--L-gloss,#1f6fb2); color:#fff; }
+.tp-rhet .tp-more{ color:var(--L-rhet,#c0392b); border-color:var(--L-rhet,#c0392b); background:rgba(192,57,43,.08); }
+.tp-rhet .tp-more:hover{ background:var(--L-rhet,#c0392b); color:#fff; }
+/* ── 說明頁「⤺ 回課文」返回鍵 ── */
+.wk-return-text{ display:inline-flex; align-items:center; gap:.3em; margin:0 0 12px; padding:7px 16px;
+  font:inherit; font-weight:700; font-size:16px; cursor:pointer; border-radius:999px;
+  color:#fff; background:var(--L-gloss,#1f6fb2); border:none; box-shadow:0 1px 4px rgba(0,0,0,.18); }
+.wk-return-text:hover{ filter:brightness(1.08); }
+.wk-return-text:active{ transform:translateY(1px); }
+/* ── 回課文後，原句短暫高亮 ── */
+@keyframes tpLineFlash{ 0%{ background:rgba(255,193,7,.55);} 100%{ background:transparent;} }
+.tp-line-flash{ animation:tpLineFlash 1.6s ease-out; border-radius:6px; }
+/* ── 作者／題解 分層＋填空 ── */
+.wk-layerbar{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.wk-layer-btn{ font:inherit; font-size:15px; font-weight:700; cursor:pointer; padding:5px 14px;
+  border-radius:999px; border:1px solid var(--mk-line,#cabb96); background:transparent; color:var(--ink,#3a2c1a); }
+.wk-layer-btn.on{ background:var(--L-book,#7a2e2e); color:#fff; border-color:var(--L-book,#7a2e2e); }
+body.dark-mode .wk-layer-btn{ color:var(--ink,#e9e2d2); }
+.wk-fill-panel{ margin-top:14px; padding:14px 16px; border:1px dashed var(--L-book,#7a2e2e);
+  border-radius:9px; background:rgba(122,46,46,.045); }
+body.dark-mode .wk-fill-panel{ background:rgba(226,166,166,.06); }
+.wk-fill-panel .wk-fill-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.wk-fill-panel .wk-fill-title{ font-weight:700; color:var(--L-book,#7a2e2e); }
+.wk-fill-panel[hidden]{ display:none; }
 </style>
 </body>
 </html>
