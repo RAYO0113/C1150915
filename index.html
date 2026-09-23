@@ -4776,6 +4776,97 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   #tp-close-blue-tab { top:calc(30% + 216px); }
 }
 </style>
+<style id="v56-note-quiz-css">
+/* v56：通用「註釋小考產生器」— 獨立工具頁，只要該課有 textPages 資料就能被抽題 */
+#note-quiz-tab {
+  position:fixed; right:0; top:calc(34% + 168px); z-index:9801;
+  padding:12px 9px;
+  background:var(--ink,#33271a); color:var(--gold,#c8931a);
+  border:1px solid rgba(200,147,26,.35); border-right:none;
+  border-radius:12px 0 0 12px;
+  writing-mode:vertical-rl; letter-spacing:2px;
+  font-family:"Noto Serif TC",serif; font-size:12px;
+  cursor:pointer; box-shadow:0 5px 18px rgba(0,0,0,.18);
+  user-select:none;
+}
+#note-quiz-tab:hover { background:#2c2218; }
+#note-quiz-panel {
+  position:fixed; right:-330px; top:calc(34% + 168px); z-index:9800;
+  width:300px; max-width:calc(100vw - 52px);
+  background:var(--surface); color:var(--ink);
+  border:1px solid var(--border); border-radius:14px;
+  box-shadow:0 12px 35px rgba(0,0,0,.18);
+  padding:14px 16px;
+  transition:right .25s ease;
+  max-height:80vh; overflow-y:auto;
+}
+#note-quiz-panel.open { right:52px; }
+.nq-panel-head {
+  display:flex; align-items:center; justify-content:space-between;
+  font-family:"Noto Serif TC",serif; font-weight:700;
+  font-size:16px; padding-bottom:10px; margin-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.nq-panel-head button { border:0; background:none; color:var(--muted); cursor:pointer; font-size:17px; }
+.nq-field { margin-bottom:12px; }
+.nq-field label { display:block; font-size:12px; color:var(--muted); font-weight:700; margin-bottom:5px; }
+.nq-field select, .nq-field input {
+  width:100%; height:38px; border:1px solid var(--border); border-radius:8px;
+  background:#fff; padding:0 10px; color:var(--ink); font-size:14px; box-sizing:border-box;
+}
+.nq-row2 { display:flex; gap:8px; }
+.nq-row2 .nq-field { flex:1; }
+.nq-start-btn {
+  width:100%; height:42px; border:0; border-radius:10px;
+  background:var(--ink,#33271a); color:#fff8ec; font-weight:700; cursor:pointer;
+  font-family:"Noto Serif TC",serif; font-size:15px; letter-spacing:.05em;
+  margin-top:4px;
+}
+.nq-start-btn:hover { background:#2c2218; }
+.nq-hint { font-size:11px; color:var(--muted); margin-top:8px; line-height:1.6; }
+
+#note-quiz-overlay {
+  position:fixed; inset:0; z-index:99000; display:none;
+  background:rgba(20,15,8,.72);
+  overflow-y:auto; padding:28px 20px 60px;
+}
+#note-quiz-overlay.open { display:block; }
+.nq-paper {
+  max-width:1100px; margin:0 auto; background:var(--surface); color:var(--ink);
+  border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.35);
+  padding:clamp(16px,3vw,30px);
+}
+.nq-paper-head {
+  display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  border-bottom:2px solid rgba(200,147,26,.4); padding-bottom:13px; margin-bottom:16px;
+}
+.nq-paper-title { font-family:"Noto Serif TC",serif; font-size:22px; font-weight:700; margin:0; }
+.nq-paper-sub { font-size:12.5px; color:var(--muted); }
+.nq-close-btn { border:0; background:none; color:var(--muted); font-size:20px; cursor:pointer; }
+.nq-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.nq-card { border:1px solid var(--border); border-radius:14px; padding:16px 18px; background:#fffefa; }
+.nq-qnum { font-size:12px; font-weight:900; color:var(--gold,#c8931a); letter-spacing:.06em; }
+.nq-sentence { font-family:"Noto Serif TC",serif; font-size:clamp(18px,2vw,22px); line-height:1.85; margin:8px 0 10px; }
+.nq-target { color:#a94335; font-weight:900; border-bottom:3px solid var(--gold,#c8931a); padding:0 2px; }
+.nq-ask { font-size:13.5px; color:var(--muted); }
+.nq-answer { display:none; margin-top:10px; padding:9px 12px; border-radius:8px; background:rgba(61,144,104,.08); border-left:4px solid #356b52; line-height:1.65; font-size:14px; }
+.nq-answer b { color:#356b52; }
+#note-quiz-overlay.show-all .nq-answer { display:block; }
+.nq-footer { display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+.nq-footer button {
+  height:42px; border:0; border-radius:10px; padding:0 20px; font-weight:700; cursor:pointer;
+  font-family:"Noto Sans TC",sans-serif; font-size:14px;
+}
+.nq-btn-primary { background:var(--ink,#33271a); color:#fff8ec; }
+.nq-btn-secondary { background:var(--warm,#eee4d4); color:var(--ink); }
+.nq-empty { text-align:center; color:var(--muted); padding:30px 10px; font-size:14px; }
+@media (max-width:760px) {
+  .nq-grid { grid-template-columns:1fr; }
+  #note-quiz-panel.open { right:46px; }
+  #note-quiz-panel { top:calc(30% + 144px); width:270px; }
+  #note-quiz-tab { top:calc(30% + 144px); padding:11px 7px; }
+}
+</style>
 </head>
 <body>
 
@@ -4866,6 +4957,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   <div class="display-setting display-dark-setting">
     <div><div class="display-dark-title">畫面亮度</div><div class="display-dark-sub">亮色／暗色</div></div>
     <button type="button" id="display-dark-toggle" class="display-dark-btn" onclick="toggleDarkMode()">🌙 暗色</button>
+  </div>
+</div>
+
+<!-- ══ v56：通用註釋小考產生器 ══ -->
+<div id="note-quiz-tab" onclick="nqToggle()">註釋小考</div>
+<div id="note-quiz-panel" aria-label="註釋小考產生器">
+  <div class="nq-panel-head">註釋小考產生器 <button type="button" onclick="nqToggle()">✕</button></div>
+  <div class="nq-field">
+    <label>課次</label>
+    <select id="nq-lesson"></select>
+  </div>
+  <div class="nq-row2">
+    <div class="nq-field"><label>起號</label><input id="nq-start" type="number" min="1" value="1"></div>
+    <div class="nq-field"><label>迄號</label><input id="nq-end" type="number" min="1" value="10"></div>
+  </div>
+  <div class="nq-row2">
+    <div class="nq-field"><label>題數</label><input id="nq-count" type="number" min="1" value="8"></div>
+    <div class="nq-field"><label>出題方式</label>
+      <select id="nq-mode"><option value="random">隨機</option><option value="seq">依序</option></select>
+    </div>
+  </div>
+  <button type="button" class="nq-start-btn" onclick="nqStart()">開始小考</button>
+  <div class="nq-hint">選好課次、範圍與題數後按「開始小考」。已抽出的題目不會因為切換答案而改變，要換題請再按一次。</div>
+</div>
+
+<div id="note-quiz-overlay">
+  <div class="nq-paper">
+    <div class="nq-paper-head">
+      <div>
+        <h2 class="nq-paper-title" id="nq-paper-title">註釋小考</h2>
+        <div class="nq-paper-sub" id="nq-paper-sub"></div>
+      </div>
+      <button type="button" class="nq-close-btn" onclick="nqClose()">✕</button>
+    </div>
+    <div class="nq-grid" id="nq-questions"></div>
+    <div class="nq-footer">
+      <button type="button" class="nq-btn-secondary" onclick="nqAll(this)">公布／隱藏答案</button>
+      <button type="button" class="nq-btn-primary" onclick="nqStart()">重新出題</button>
+    </div>
   </div>
 </div>
 
@@ -9559,6 +9689,736 @@ body.dark-mode .wk-fill-panel{ background:rgba(226,166,166,.06); }
   function watch(id){ var n=document.getElementById(id); if(n) new MutationObserver(onMutate).observe(n,{childList:true,subtree:true}); }
   function startWatch(){ watch('wk-slide-area'); watch('wkfs-body'); }
   if(document.readyState==='loading') window.addEventListener('load', startWatch); else startWatch();
+})();
+</script>
+
+<script id="v56-note-quiz-js">
+(function(){
+  function nqExtractAnnotations(text){
+    var out = [];
+    var re = /\{n:(\d+)\|/g;
+    var m;
+    while ((m = re.exec(text)) !== null) {
+      var no = parseInt(m[1], 10);
+      var i = m.index + m[0].length;
+      var depth = 1;
+      var raw = '';
+      while (i < text.length && depth > 0) {
+        var c = text[i];
+        if (c === '{') depth++;
+        else if (c === '}') { depth--; if (depth === 0) break; }
+        raw += c;
+        i++;
+      }
+      out.push({ no: no, rawWord: raw });
+      re.lastIndex = i + 1;
+    }
+    return out;
+  }
+  function nqCleanNested(raw){
+    return raw.replace(/\{[gzpy]:([^|}]*)\|[^}]*\}/g, '$1');
+  }
+  function nqStripMarkupWhole(text){
+    var result = '';
+    var i = 0;
+    while (i < text.length) {
+      if (text[i] === '{') {
+        var tagMatch = /^\{([nzgpy]):(\d+\|)?/.exec(text.slice(i));
+        if (tagMatch) {
+          var tagType = tagMatch[1];
+          var colonIdx = text.indexOf(':', i);
+          var k = colonIdx + 1;
+          var numMatch = /^\d+\|/.exec(text.slice(k));
+          if (numMatch) k += numMatch[0].length;
+          // 逐字掃描找出這個標記對應的巢狀安全結尾 '}'，同時記錄「最外層（depth 1）」第一個 '|' 的位置，
+          // 只有 g/z/p/y 這種「字|釋義」型標記才需要用它切掉後面的釋義；n 標記的內容整段都是字面文字。
+          var content = '';
+          var depth = 1;
+          var p = k;
+          var topPipeRel = -1;
+          while (p < text.length && depth > 0) {
+            var c = text[p];
+            if (c === '{') depth++;
+            else if (c === '}') { depth--; if (depth === 0) break; }
+            else if (c === '|' && depth === 1 && topPipeRel < 0) topPipeRel = content.length;
+            content += c;
+            p++;
+          }
+          var literal;
+          if (tagType !== 'n' && topPipeRel >= 0) {
+            literal = content.slice(0, topPipeRel);
+          } else {
+            literal = content;
+          }
+          result += nqStripMarkupWhole(literal);
+          i = p + 1;
+          continue;
+        }
+      }
+      result += text[i];
+      i++;
+    }
+    return result;
+  }
+  var NQ_PUNCT_RE = /[、，,。！？「」『』：；\s]/g;
+  function nqNorm(s){ return String(s).replace(NQ_PUNCT_RE, ''); }
+  function nqStripTags(html){ return String(html).replace(/<[^>]+>/g, ''); }
+
+  function nqResolveAnswer(word, segNotes){
+    var normWord = nqNorm(word);
+    for (var i=0;i<segNotes.length;i++){
+      if (nqNorm(segNotes[i][0]) === normWord) return { answer: segNotes[i][1], how:'exact' };
+    }
+    var PREFIX_LEN = 4;
+    var candidates = segNotes.filter(function(nItem){
+      var nk = nqNorm(nItem[0]);
+      if (nk.indexOf(normWord) >= 0 || normWord.indexOf(nk) >= 0) return true;
+      var plen = Math.min(PREFIX_LEN, nk.length, normWord.length);
+      if (plen >= PREFIX_LEN && nk.slice(0, plen) === normWord.slice(0, plen)) return true;
+      return false;
+    });
+    candidates = candidates.sort(function(a,b){ return nqNorm(b[0]).length - nqNorm(a[0]).length; });
+    if (candidates.length) {
+      var best = candidates[0];
+      var plain = nqStripTags(best[1]);
+      var escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var inlineRe = new RegExp(escaped + '[，,：:]([^。]+)。');
+      var im = inlineRe.exec(plain);
+      if (im) return { answer: word + '，' + im[1] + '。', how:'inline' };
+      return { answer: plain, how:'whole' };
+    }
+    return null;
+  }
+
+  var nqBankCache = {};
+  function wkBuildNoteBank(lessonKey){
+    if (nqBankCache[lessonKey]) return nqBankCache[lessonKey];
+    var entry = (typeof TEXTBOOK !== 'undefined') ? TEXTBOOK[lessonKey] : null;
+    var bank = [];
+    if (entry && Array.isArray(entry.textPages)) {
+      entry.textPages.forEach(function(seg){
+        var segNotes = Array.isArray(seg.notes) ? seg.notes : [];
+        var lines = Array.isArray(seg.lines) ? seg.lines : [];
+        lines.forEach(function(line){
+          var text = line.text || '';
+          var anns = nqExtractAnnotations(text);
+          if (!anns.length) return;
+          var sentence = nqStripMarkupWhole(text);
+          anns.forEach(function(a){
+            var word = nqCleanNested(a.rawWord);
+            var resolved = nqResolveAnswer(word, segNotes);
+            if (resolved) {
+              bank.push({ no:a.no, word:word, sentence:sentence, answer:resolved.answer });
+            }
+          });
+        });
+      });
+    }
+    bank.sort(function(a,b){ return a.no - b.no; });
+    nqBankCache[lessonKey] = bank;
+    return bank;
+  }
+
+  function nqEligibleLessons(){
+    var keys = [];
+    var seen = {};
+    var all = [].concat(
+      (typeof WK_14 !== 'undefined' ? WK_14 : []),
+      (typeof WK_EXTRA !== 'undefined' ? WK_EXTRA : []),
+      (typeof WK_PROSE !== 'undefined' ? WK_PROSE : [])
+    );
+    all.forEach(function(k){
+      if (seen[k]) return;
+      seen[k] = true;
+      var entry = (typeof TEXTBOOK !== 'undefined') ? TEXTBOOK[k] : null;
+      if (entry && Array.isArray(entry.textPages) && entry.textPages.length) keys.push(k);
+    });
+    return keys;
+  }
+
+  function nqInitPanel(){
+    var sel = document.getElementById('nq-lesson');
+    if (!sel) return;
+    var keys = nqEligibleLessons();
+    sel.innerHTML = keys.map(function(k){ return '<option value="'+k.replace(/"/g,'&quot;')+'">'+k+'</option>'; }).join('');
+  }
+
+  function nqToggle(){
+    nqInitPanel();
+    var panel = document.getElementById('note-quiz-panel');
+    if (panel) panel.classList.toggle('open');
+  }
+
+  var nqCurrentItems = [];
+  function nqEsc(s){ return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+  function nqMark(sentence, word){
+    var i = sentence.indexOf(word);
+    if (i < 0) return nqEsc(sentence);
+    return nqEsc(sentence.slice(0,i)) + '<span class="nq-target">' + nqEsc(word) + '</span>' + nqEsc(sentence.slice(i+word.length));
+  }
+
+  function nqStart(){
+    var lessonSel = document.getElementById('nq-lesson');
+    var lessonKey = lessonSel ? lessonSel.value : '';
+    if (!lessonKey) return;
+    var bank = wkBuildNoteBank(lessonKey);
+    var a = Math.max(1, parseInt(document.getElementById('nq-start').value,10) || 1);
+    var b = Math.max(a, parseInt(document.getElementById('nq-end').value,10) || a);
+    var count = Math.max(1, parseInt(document.getElementById('nq-count').value,10) || 1);
+    var mode = document.getElementById('nq-mode').value;
+    var pool = bank.filter(function(it){ return it.no >= a && it.no <= b; });
+    if (mode === 'random') {
+      pool = pool.slice().sort(function(){ return Math.random() - 0.5; });
+    }
+    var items = pool.slice(0, count);
+    nqCurrentItems = items;
+
+    var overlay = document.getElementById('note-quiz-overlay');
+    overlay.classList.remove('show-all');
+    document.getElementById('nq-paper-title').textContent = '《' + lessonKey.split('—')[0] + '》註釋小考';
+    document.getElementById('nq-paper-sub').textContent = '第 ' + a + '～' + b + ' 號註釋，共 ' + items.length + ' 題' + (items.length < count ? '（範圍內題目不足）' : '');
+    var qEl = document.getElementById('nq-questions');
+    if (!items.length) {
+      qEl.innerHTML = '<div class="nq-empty">這個範圍內沒有可用的註釋題目，請調整起訖號。</div>';
+    } else {
+      qEl.innerHTML = items.map(function(it, idx){
+        return '<article class="nq-card">' +
+          '<div class="nq-qnum">第 ' + (idx+1) + ' 題　｜　註釋 ' + it.no + ' 號</div>' +
+          '<div class="nq-sentence">' + nqMark(it.sentence, it.word) + '</div>' +
+          '<div class="nq-ask">請寫出「' + nqEsc(it.word) + '」的意思：</div>' +
+          '<div class="nq-answer"><b>答</b>　' + it.answer + '</div>' +
+          '</article>';
+      }).join('');
+    }
+    overlay.classList.add('open');
+  }
+
+  function nqAll(btn){
+    var overlay = document.getElementById('note-quiz-overlay');
+    overlay.classList.toggle('show-all');
+    btn.textContent = overlay.classList.contains('show-all') ? '隱藏答案' : '公布／隱藏答案';
+  }
+
+  function nqClose(){
+    var overlay = document.getElementById('note-quiz-overlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  window.nqToggle = nqToggle;
+  window.nqStart = nqStart;
+  window.nqAll = nqAll;
+  window.nqClose = nqClose;
+  window.wkBuildNoteBank = wkBuildNoteBank;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', nqInitPanel);
+  } else {
+    nqInitPanel();
+  }
+})();
+</script>
+<style id="v56-nq2-css">
+/* v56：註釋小考 第二版（取代 v55 的「註釋小考」抽屜面板；舊面板程式保留未刪，只是不再被開啟）
+   全螢幕：選題畫面（選題／必考／排除）＋ 考卷畫面（一頁 5 題、點題看答案、超過 5 題捲動） */
+#nq2{
+  --q-ink:#21180f; --q-paper:#f6efe2; --q-surface:#fffdf8; --q-line:#dccbb0;
+  --q-gold:#b8861b; --q-gold-soft:#f3e2b3; --q-muted:#7b6b57;
+  --q-hl:#c0392b; --q-hl-bg:#fde7c4; --q-ok:#2f6b4f; --q-ok-bg:#e6f2ea;
+  --q-ex:#9a8f82; --q-ex-bg:#ece6dc; --q-must:#c0392b;
+  --q-fs:1;
+  position:fixed; inset:0; z-index:99500; display:none;
+  background:var(--q-paper); color:var(--q-ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; -webkit-tap-highlight-color:transparent;
+}
+body.dark-mode #nq2{
+  --q-ink:#f1e9dc; --q-paper:#16120d; --q-surface:#221c15; --q-line:#4a3d2d;
+  --q-gold:#e0b04a; --q-gold-soft:#4a3a17; --q-muted:#b7a78f;
+  --q-hl:#ff8a70; --q-hl-bg:#4a2b16; --q-ok:#8fd3ad; --q-ok-bg:#1d3327;
+  --q-ex:#7d7264; --q-ex-bg:#2b251e; --q-must:#e0664f;
+}
+#nq2.open{display:block}
+#nq2 *{box-sizing:border-box}
+#nq2 button,#nq2 input,#nq2 select{font-family:inherit;color:inherit}
+#nq2 .serif{font-family:"Noto Serif TC","PMingLiU","MingLiU",serif}
+
+/* 選題畫面 */
+#nq2-setup{position:absolute;inset:0;overflow-y:auto}
+#nq2-setup .in{max-width:1100px;margin:0 auto;padding:20px 20px 120px}
+#nq2 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+#nq2 .top h1{font-size:30px;margin:0;flex:1;min-width:220px}
+#nq2 select.big{font-size:22px;padding:10px 14px;border:2px solid var(--q-line);border-radius:12px;background:var(--q-surface)}
+#nq2 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--q-surface);
+  border:1px solid var(--q-line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:20px}
+#nq2 .bar input[type=number]{width:74px;font-size:22px;padding:6px 8px;border:2px solid var(--q-line);border-radius:10px;background:var(--q-paper);text-align:center}
+#nq2 .btn{font-size:20px;padding:10px 16px;border-radius:12px;border:2px solid var(--q-line);background:var(--q-surface);cursor:pointer;font-weight:700}
+#nq2 .btn:active{transform:scale(.97)}
+#nq2 .btn.dk{background:var(--q-ink);color:var(--q-paper);border-color:var(--q-ink)}
+#nq2 .seg{display:inline-flex;border:2px solid var(--q-ink);border-radius:12px;overflow:hidden}
+#nq2 .seg button{font-size:20px;padding:10px 18px;border:0;background:transparent;cursor:pointer;font-weight:700}
+#nq2 .seg button.on{background:var(--q-ink);color:var(--q-paper)}
+#nq2 .seg button.on.ex{background:var(--q-ex);color:#fff}
+#nq2 .seg button.on.mu{background:var(--q-must);color:#fff}
+#nq2 .hint{color:var(--q-muted);font-size:17px;margin:4px 2px 12px}
+#nq2 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px 10px}
+#nq2 .chip{position:relative;text-align:left;border:2px solid var(--q-line);background:var(--q-surface);border-radius:12px;
+  padding:10px 12px;cursor:pointer;min-height:64px;display:flex;align-items:center;gap:10px}
+#nq2 .chip .no{font-size:15px;font-weight:800;min-width:30px;height:30px;border-radius:15px;display:grid;place-items:center;background:var(--q-paper);color:var(--q-muted)}
+#nq2 .chip .w{font-size:22px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#nq2 .chip.on{border-color:var(--q-gold);background:var(--q-gold-soft)}
+#nq2 .chip.on .no{background:var(--q-gold);color:#fff}
+#nq2 .chip.ex{background:var(--q-ex-bg);border-style:dashed;color:var(--q-ex)}
+#nq2 .chip.ex .w{text-decoration:line-through}
+#nq2 .chip.ex::after{content:"排除";position:absolute;top:-9px;right:8px;font-size:13px;background:var(--q-ex);color:#fff;border-radius:6px;padding:1px 6px}
+#nq2 .chip .vc{position:absolute;bottom:-9px;right:8px;font-size:12px;font-weight:700;background:var(--q-ink);color:var(--q-paper);border-radius:6px;padding:0 6px}
+#nq2 .chip.must{border-color:var(--q-must);border-width:3px}
+#nq2 .chip.must .no{background:var(--q-must);color:#fff}
+#nq2 .chip.must::after{content:"必考";position:absolute;top:-10px;right:8px;font-size:13px;font-weight:800;background:var(--q-must);color:#fff;border-radius:6px;padding:1px 6px}
+#nq2 .dock{position:absolute;left:0;right:0;bottom:0;background:var(--q-surface);border-top:1px solid var(--q-line);
+  padding:12px 20px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:20px;z-index:2}
+#nq2 .dock .go{font-size:24px;padding:12px 34px}
+#nq2 .dock label{display:flex;gap:6px;align-items:center;cursor:pointer}
+#nq2 .dock input[type=checkbox]{width:22px;height:22px}
+#nq2 .empty{padding:40px;text-align:center;color:var(--q-muted);font-size:20px}
+
+/* 考卷畫面 */
+#nq2-quiz{display:none;position:absolute;inset:0;z-index:3;flex-direction:column;background:var(--q-paper)}
+#nq2-quiz.show{display:flex}
+#nq2 .qhead{height:64px;flex:0 0 64px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--q-ink);color:var(--q-paper)}
+#nq2 .qhead .t{flex:1;font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nq2 .qhead .t small{font-weight:400;opacity:.75;font-size:17px;margin-left:8px}
+#nq2 .qhead button{font-size:18px;padding:8px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:inherit;cursor:pointer;font-weight:700}
+body.dark-mode #nq2 .qhead button{border-color:rgba(0,0,0,.3)}
+#nq2 .qhead button.gold{background:var(--q-gold);border-color:var(--q-gold);color:#fff}
+#nq2-qlist{flex:1;overflow-y:auto;display:flex;flex-direction:column;scroll-snap-type:y proximity}
+#nq2 .qc{flex:1 0 auto;min-height:calc((100dvh - 64px) / 5);display:flex;gap:18px;align-items:center;
+  padding:6px 24px;border-bottom:1.5px solid var(--q-line);background:var(--q-surface);cursor:pointer;scroll-snap-align:start}
+#nq2 .qc:nth-child(even){background:var(--q-paper)}
+#nq2 .qn{flex:0 0 auto;width:calc(54px*var(--q-fs));height:calc(54px*var(--q-fs));border-radius:50%;background:var(--q-ink);color:var(--q-paper);
+  display:grid;place-items:center;font-size:calc(28px*var(--q-fs));font-weight:800}
+#nq2 .qb{flex:1;min-width:0}
+#nq2 .qs{font-size:calc(36px*var(--q-fs));line-height:1.35}
+#nq2 .qs mark{background:var(--q-hl-bg);color:var(--q-hl);font-weight:800;padding:0 .08em;border-radius:4px;
+  text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+#nq2 .qs .el{color:var(--q-muted)}
+#nq2 .qa{margin-top:4px;font-size:calc(28px*var(--q-fs));line-height:1.35;min-height:1.35em}
+#nq2 .qa-hint{color:var(--q-muted);font-size:calc(20px*var(--q-fs));opacity:.7}
+#nq2 .qa-body{display:none;background:var(--q-ok-bg);color:var(--q-ok);border-radius:10px;padding:4px 14px}
+#nq2 .qa-body .aw{font-weight:800;margin-right:.5em}
+#nq2 .qa-body .bk-note,#nq2 .qa-body .zy-note{display:block;font-size:.66em;color:var(--q-muted);margin-top:2px}
+#nq2 .qc.open .qa-hint{display:none}
+#nq2 .qc.open .qa-body{display:block}
+#nq2 .qc .src{font-size:calc(16px*var(--q-fs));color:var(--q-muted);margin-left:.6em;font-weight:400}
+#nq2 .qend{padding:26px;text-align:center;color:var(--q-muted);font-size:18px}
+</style>
+
+<style id="v56-sidetab-hide-css">
+/* v56：任一右側面板（班級進度／顯示設定／舊註釋小考面板）打開時，隱藏所有右側邊籤，
+   避免邊籤蓋住面板右緣（例如班級進度每筆紀錄的刪除鍵 ✕）。面板用自己的 ✕ 關閉。 */
+body.v56-panel-open #cls-tab,
+body.v56-panel-open #display-tab,
+body.v56-panel-open #note-quiz-tab,
+body.v56-panel-open #wk-ink-tab,
+body.v56-panel-open #tp-close-blue-tab{ display:none !important; }
+</style>
+
+<div id="nq2" aria-label="註釋小考">
+  <div id="nq2-setup"><div class="in">
+    <div class="top">
+      <h1 class="serif">註釋小考</h1>
+      <select id="nq2-lesson" class="big" aria-label="課次"></select>
+      <button type="button" class="btn" id="nq2-dark">深色</button>
+      <button type="button" class="btn dk" id="nq2-close">✕ 回到課文</button>
+    </div>
+    <div class="bar">
+      <span class="seg" role="group" aria-label="點選模式">
+        <button type="button" id="nq2-mPick" class="on">點＝選題</button>
+        <button type="button" id="nq2-mMust">點＝必考</button>
+        <button type="button" id="nq2-mEx">點＝排除</button>
+      </span>
+      <span style="flex:1"></span>
+      <span>範圍</span><input type="number" id="nq2-ra" min="1"><span>～</span><input type="number" id="nq2-rb" min="1">
+      <button type="button" class="btn" id="nq2-bRange">範圍全選</button>
+      <span>隨機</span><input type="number" id="nq2-rn" min="1" value="5"><span>題</span>
+      <button type="button" class="btn dk" id="nq2-bRand">抽！</button>
+      <button type="button" class="btn" id="nq2-bClear">清除選取</button>
+    </div>
+    <div class="hint" id="nq2-hint"></div>
+    <div class="grid" id="nq2-grid"></div>
+  </div></div>
+  <div class="dock">
+    <span id="nq2-cnt">已選 0 題</span>
+    <label><input type="checkbox" id="nq2-shuffle"> 打亂順序</label>
+    <button type="button" class="btn" id="nq2-bUnex">清除必考／排除標記</button>
+    <button type="button" class="btn dk go" id="nq2-bGo">開始小考 ▶</button>
+  </div>
+  <div id="nq2-quiz">
+    <div class="qhead">
+      <button type="button" id="nq2-bBack">◀ 選題</button>
+      <div class="t" id="nq2-qTitle"></div>
+      <button type="button" id="nq2-bSm" aria-label="字變小">A−</button>
+      <button type="button" id="nq2-bLg" aria-label="字變大">A＋</button>
+      <button type="button" id="nq2-bAll" class="gold">全部顯示答案</button>
+    </div>
+    <div id="nq2-qlist"></div>
+  </div>
+</div>
+
+<script id="v56-nq2-js">
+(function(){
+  /* ───────── 題庫：即時從 TEXTBOOK 解析（新課只要有 textPages 就自動出現） ─────────
+     基本題目沿用 v55 的 wkBuildNoteBank()（[註號, 目標詞, 原句, 答案]）；
+     另外算出：①目標詞在原句中的實際位置（同字多次出現時標對那一個）
+               ②「整句＋小字詞」型註釋的出題選項（依註釋原文「詞，解釋。」切出，不改寫內容） */
+  var PUN = /[、，,。！？「」『』：；\s]/;
+  function norm(s){ return String(s).replace(/[、，,。！？「」『』：；\s]/g, ''); }
+  var SPAN_RE = /<span class='(bk|zy)-note'>[\s\S]*?<\/span>/g;
+  function spansOf(h){ return (String(h).match(SPAN_RE) || []).join(''); }
+  function noSpan(h){ return String(h).replace(SPAN_RE, '').replace(/<[^>]+>/g, ''); }
+  // 與 v55 nqStripMarkupWhole 相同邏輯：把 {n:}/{g:}/{z:}/{p:}/{y:} 攤平成純文字
+  function strip(text){
+    var result = '', i = 0;
+    while (i < text.length){
+      if (text[i] === '{'){
+        var tm = /^\{([nzgpy]):(\d+\|)?/.exec(text.slice(i));
+        if (tm){
+          var tt = tm[1], k = text.indexOf(':', i) + 1;
+          var nm = /^\d+\|/.exec(text.slice(k)); if (nm) k += nm[0].length;
+          var content = '', depth = 1, p = k, tp = -1;
+          while (p < text.length && depth > 0){
+            var c = text[p];
+            if (c === '{') depth++;
+            else if (c === '}'){ depth--; if (depth === 0) break; }
+            else if (c === '|' && depth === 1 && tp < 0) tp = content.length;
+            content += c; p++;
+          }
+          result += strip((tt !== 'n' && tp >= 0) ? content.slice(0, tp) : content);
+          i = p + 1; continue;
+        }
+      }
+      result += text[i]; i++;
+    }
+    return result;
+  }
+  function clean(raw){ return raw.replace(/\{[gzpy]:([^|}]*)\|[^}]*\}/g, '$1'); }
+  // 與 v55 nqResolveAnswer 相同的候選規則，但回傳整條 note
+  function findNote(word, notes){
+    var nw = norm(word);
+    for (var i = 0; i < notes.length; i++) if (norm(notes[i][0]) === nw) return notes[i];
+    var c = notes.filter(function(n){
+      var nk = norm(n[0]);
+      if (nk.indexOf(nw) >= 0 || nw.indexOf(nk) >= 0) return true;
+      var pl = Math.min(4, nk.length, nw.length);
+      return pl >= 4 && nk.slice(0, pl) === nw.slice(0, pl);
+    }).sort(function(a, b){ return norm(b[0]).length - norm(a[0]).length; });
+    return c[0] || null;
+  }
+  // 在原句中找「忽略標點」的片語，回傳 [起, 迄)
+  function spanOf(s, phrase, from){
+    var np = norm(phrase); if (!np) return null;
+    for (var st = from || 0; st < s.length; st++){
+      if (PUN.test(s[st])) continue;
+      var k = 0, j = st;
+      while (j < s.length && k < np.length){
+        if (PUN.test(s[j])){ j++; continue; }
+        if (s[j] !== np[k]) break;
+        j++; k++;
+      }
+      if (k === np.length) return [st, j];
+    }
+    return null;
+  }
+  function isZhuyin(t){ return /^[ㄅ-ㄩˊˇˋ˙\s]+$/.test(t) || /^音/.test(t); }
+
+  function buildVariants(row){
+    if (!row || !row.note) return null;
+    var key = row.note[0], html = row.note[1], s = row.sentence;
+    if (norm(key).length < 3) return null;
+    var whole = spanOf(s, key);
+    if (!whole){ var q = /「(.+?)」/.exec(key); if (q && spanOf(s, q[1])) whole = [row.pos, row.pos + row.word.length]; }
+    if (!whole) return null;                        // 註釋詞不在這一句 → 不拆
+    var segs = noSpan(html).split(/(?<=[。？！])/).map(function(x){ return x.trim(); }).filter(Boolean);
+    var main = [], subs = [];
+    segs.forEach(function(sg){
+      var body = sg.replace(/[。]$/, '');
+      var mm = /^([^，。（）「」『』？！、]{1,6})(（[^）]*）)?，(.+)$/.exec(body);
+      if (mm && norm(key).indexOf(norm(mm[1])) >= 0 && norm(mm[1]) !== norm(key)){
+        subs.push({ w: mm[1], a: body.slice(mm[1].length + (mm[2] || '').length + 1) + '。' });
+      } else if (!subs.length) main.push(sg);
+      else subs[subs.length - 1].a += sg;
+    });
+    var good = subs.filter(function(x){ return !isZhuyin(x.a.replace(/。$/, '')); });
+    if (!good.length || !main.length) return null;
+    var vs = [[s.slice(whole[0], whole[1]), whole[0], whole[1], main.join('') + spansOf(html), 'whole']];
+    good.forEach(function(x){
+      var sp = spanOf(s, x.w, whole[0]) || spanOf(s, x.w, 0);
+      if (sp) vs.push([x.w, sp[0], sp[1], x.a, 'sub']);
+    });
+    return vs.length >= 2 ? vs : null;
+  }
+
+  var bankCache = {};
+  function buildLesson(L){
+    if (bankCache[L]) return bankCache[L];
+    var bank = (typeof wkBuildNoteBank === 'function') ? wkBuildNoteBank(L) : [];
+    var rows = [];
+    ((TEXTBOOK[L] || {}).textPages || []).forEach(function(seg){
+      var notes = seg.notes || [];
+      (seg.lines || []).forEach(function(line){
+        var t = line.text || '', re = /\{n:(\d+)\|/g, m;
+        while ((m = re.exec(t))){
+          var i = m.index + m[0].length, d = 1, raw = '';
+          while (i < t.length && d > 0){ var c = t[i]; if (c === '{') d++; else if (c === '}'){ d--; if (!d) break; } raw += c; i++; }
+          var w = clean(raw);
+          rows.push({ no: +m[1], word: w, sentence: strip(t), pos: strip(t.slice(0, m.index)).length, note: findNote(w, notes) });
+        }
+      });
+    });
+    rows.sort(function(a, b){ return a.no - b.no; });
+    var items = [], pos = [], vars = {}, r = 0;
+    bank.forEach(function(b, bi){
+      while (r < rows.length && !(rows[r].no === b.no && rows[r].sentence === b.sentence && rows[r].word === b.word)) r++;
+      var row = rows[r++];
+      items.push([b.no, b.word, b.sentence, b.answer]);
+      pos.push(row && row.sentence.substr(row.pos, b.word.length) === b.word ? row.pos : b.sentence.indexOf(b.word));
+      var vs = buildVariants(row);
+      if (vs) vars[bi] = vs;
+    });
+    return (bankCache[L] = { lesson: L, items: items, pos: pos, vars: vars });
+  }
+  function eligibleLessons(){
+    var seen = {}, out = [];
+    [].concat(typeof WK_14 !== 'undefined' ? WK_14 : [], typeof WK_EXTRA !== 'undefined' ? WK_EXTRA : [], typeof WK_PROSE !== 'undefined' ? WK_PROSE : [])
+      .forEach(function(k){
+        if (seen[k]) return; seen[k] = true;
+        var e = (typeof TEXTBOOK !== 'undefined') ? TEXTBOOK[k] : null;
+        if (e && Array.isArray(e.textPages) && e.textPages.length) out.push(k);
+      });
+    return out;
+  }
+
+  /* ───────── 小工具 ───────── */
+  function $(id){ return document.getElementById('nq2-' + id); }
+  var LS = {
+    get: function(k, d){ try{ var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set: function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+  function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function byIdx(a, b){ return a - b; }
+
+  var LESSONS = [], D = null;   // D = 目前課次 buildLesson() 結果
+  var sel = [], excl = new Set(), must = new Set(), mode = 'pick';
+  function items(){ return D ? D.items : []; }
+  function itemKey(it){ return it[0] + '|' + it[1]; }
+  function exKey(){ return 'nq-excl:' + D.lesson; }
+  function muKey(){ return 'nq-must:' + D.lesson; }
+  function varCount(i){ return (D.vars[i] || []).length; }
+  function chipLabel(i){ return varCount(i) ? D.vars[i][0][0] : items()[i][1]; }
+
+  function loadMarks(){
+    var ex = new Set(LS.get(exKey(), [])), mu = new Set(LS.get(muKey(), []));
+    excl = new Set(); must = new Set();
+    items().forEach(function(it, i){
+      if (ex.has(itemKey(it))) excl.add(i);
+      else if (mu.has(itemKey(it))) must.add(i);
+    });
+  }
+  function saveMarks(){
+    LS.set(exKey(), Array.from(excl).map(function(i){ return itemKey(items()[i]); }));
+    LS.set(muKey(), Array.from(must).map(function(i){ return itemKey(items()[i]); }));
+  }
+  function withMust(arr){ return Array.from(new Set(Array.from(must).concat(arr))).sort(byIdx); }
+
+  /* ───────── 選題畫面 ───────── */
+  function setLesson(L){
+    D = buildLesson(L);
+    loadMarks();
+    sel = Array.from(must).sort(byIdx);
+    var nos = items().map(function(it){ return it[0]; });
+    $('ra').value = nos.length ? Math.min.apply(null, nos) : 1;
+    $('rb').value = nos.length ? Math.max.apply(null, nos) : 1;
+    LS.set('nq-lesson', L);
+    render();
+  }
+  var HINTS = {
+    pick: '點題目＝選入／取消；也可以用上方「範圍全選」或「隨機抽」。必考題一定會在裡面，排除題一定不會被抽到。',
+    must: '必考模式：點題目＝設為必考／取消。隨機抽題時必考題一定抽到，剩下的名額才隨機補。標記會自動記住。',
+    ex:   '排除模式：點題目＝排除／恢復（例如已經考過的）。排除紀錄會自動記住，下次打開還在。'
+  };
+  function render(){
+    if (!items().length){
+      $('grid').innerHTML = '<div class="empty">這一課目前沒有可抽題的註釋資料。</div>';
+    } else {
+      $('grid').innerHTML = items().map(function(it, i){
+        var on = sel.indexOf(i) >= 0, ex = excl.has(i), mu = must.has(i);
+        return '<button type="button" class="chip' + (on ? ' on' : '') + (ex ? ' ex' : '') + (mu ? ' must' : '') + '" data-i="' + i + '">' +
+          '<span class="no">' + it[0] + '</span><span class="w serif">' + esc(chipLabel(i)) + '</span>' +
+          (varCount(i) ? '<span class="vc">' + varCount(i) + '選1</span>' : '') + '</button>';
+      }).join('');
+    }
+    var nEx = excl.size, nMu = must.size;
+    var tags = [nMu ? '必考 ' + nMu : '', nEx ? '排除 ' + nEx : ''].filter(Boolean).join('・');
+    $('cnt').textContent = '已選 ' + sel.length + ' 題' + (tags ? '（' + tags + '）' : '');
+    $('bGo').disabled = !sel.length;
+    $('bGo').style.opacity = sel.length ? 1 : .4;
+    $('bUnex').style.display = (nEx || nMu) ? '' : 'none';
+    $('hint').textContent = HINTS[mode];
+  }
+  function setMode(m){
+    mode = m;
+    $('mPick').className = m === 'pick' ? 'on' : '';
+    $('mMust').className = m === 'must' ? 'on mu' : '';
+    $('mEx').className = m === 'ex' ? 'on ex' : '';
+    render();
+  }
+  function rangePool(){
+    var a = +$('ra').value || 1, b = +$('rb').value || a;
+    var lo = Math.min(a, b), hi = Math.max(a, b);
+    return items().map(function(it, i){ return i; }).filter(function(i){ return items()[i][0] >= lo && items()[i][0] <= hi && !excl.has(i); });
+  }
+
+  /* ───────── 考卷畫面 ───────── */
+  // 句子太長時只顯示目標所在的小句（以。！？；切），前後加「…」；目標跨小句就顯示整句
+  function excerpt(s, a, b){
+    var full = { pre: s.slice(0, a), w: s.slice(a, b), post: s.slice(b), cutL: false, cutR: false };
+    if (a < 0 || s.length <= 30) return full;
+    var parts = s.match(/[^。！？；]+[。！？；」』]*/g) || [s];
+    if (parts.join('') !== s) return full;
+    var acc = 0;
+    for (var k = 0; k < parts.length; k++){
+      var p = parts[k], end = acc + p.length;
+      if (a >= acc && b <= end) return { pre: p.slice(0, a - acc), w: s.slice(a, b), post: p.slice(b - acc), cutL: k > 0, cutR: k < parts.length - 1 };
+      acc = end;
+    }
+    return full;
+  }
+  // 決定這一題考什麼：有多個選項就等機率隨機挑一個
+  function pickVariant(i){
+    var it = items()[i], vs = D.vars[i];
+    if (vs){ var v = vs[Math.floor(Math.random() * vs.length)]; return { w: v[0], a: v[1], b: v[2], ans: v[3], whole: v[4] === 'whole' }; }
+    var at = D.pos[i];
+    return { w: it[1], a: at, b: at < 0 ? -1 : at + it[1].length, ans: it[3], whole: false };
+  }
+  function startQuiz(){
+    var q = $('shuffle').checked ? shuffle(sel) : sel.slice().sort(byIdx);
+    $('qTitle').innerHTML = '〈' + esc(D.lesson.split('—')[0]) + '〉註釋小考<small>共 ' + q.length + ' 題・點題目看答案</small>';
+    $('qlist').innerHTML = q.map(function(i, k){
+      var it = items()[i], s = it[2], v = pickVariant(i);
+      var x = v.a < 0 ? { pre: s, w: '', post: '', cutL: false, cutR: false } : excerpt(s, v.a, v.b);
+      return '<article class="qc">' +
+        '<div class="qn">' + (k + 1) + '</div>' +
+        '<div class="qb">' +
+          '<div class="qs serif">' + (x.cutL ? '<span class="el">…</span>' : '') + esc(x.pre) +
+            (x.w ? '<mark>' + esc(x.w) + '</mark>' : '') + esc(x.post) + (x.cutR ? '<span class="el">…</span>' : '') +
+            '<span class="src">註' + it[0] + '</span></div>' +
+          '<div class="qa"><span class="qa-hint">點一下看答案</span>' +
+            '<div class="qa-body"><span class="aw">' + (v.whole ? '整句' : esc(v.w)) + '：</span>' + v.ans + '</div></div>' +
+        '</div></article>';
+    }).join('') + (q.length > 5 ? '<div class="qend">— 共 ' + q.length + ' 題，以上 —</div>' : '');
+    syncAllBtn();
+    $('quiz').classList.add('show');
+    $('qlist').scrollTop = 0;
+  }
+  function cards(){ return Array.prototype.slice.call(document.querySelectorAll('#nq2 .qc')); }
+  function syncAllBtn(){
+    var cs = cards();
+    $('bAll').textContent = cs.length && cs.every(function(c){ return c.classList.contains('open'); }) ? '全部隱藏答案' : '全部顯示答案';
+  }
+  var fs = LS.get('nq-fs', 1);
+  function applyFs(){ document.getElementById('nq2').style.setProperty('--q-fs', fs); LS.set('nq-fs', fs); }
+  function syncDarkBtn(){ $('dark').textContent = document.body.classList.contains('dark-mode') ? '淺色' : '深色'; }
+
+  /* ───────── 開關 ───────── */
+  function nq2Open(){
+    var old = document.getElementById('note-quiz-panel'); if (old) old.classList.remove('open');
+    LESSONS = eligibleLessons();
+    $('lesson').innerHTML = LESSONS.map(function(k, i){
+      return '<option value="' + i + '">' + esc(k) + '（' + buildLesson(k).items.length + ' 題）</option>';
+    }).join('');
+    var last = LS.get('nq-lesson', LESSONS[0]);
+    var li = Math.max(0, LESSONS.indexOf(last));
+    $('lesson').value = li;
+    applyFs(); syncDarkBtn();
+    $('quiz').classList.remove('show');
+    if (LESSONS.length) setLesson(LESSONS[li]);
+    document.getElementById('nq2').classList.add('open');
+  }
+  function nq2Close(){ document.getElementById('nq2').classList.remove('open'); }
+
+  function init(){
+    $('grid').addEventListener('click', function(e){
+      var b = e.target.closest('.chip'); if (!b) return;
+      var i = +b.dataset.i;
+      if (mode === 'pick'){
+        if (excl.has(i) || must.has(i)) return;   // 必考／排除題要到各自模式才能改
+        sel = sel.indexOf(i) >= 0 ? sel.filter(function(x){ return x !== i; }) : sel.concat(i);
+      } else if (mode === 'must'){
+        if (must.has(i)){ must.delete(i); sel = sel.filter(function(x){ return x !== i; }); }
+        else { must.add(i); excl.delete(i); if (sel.indexOf(i) < 0) sel = sel.concat(i); }
+        saveMarks();
+      } else {
+        if (excl.has(i)) excl.delete(i); else { excl.add(i); must.delete(i); sel = sel.filter(function(x){ return x !== i; }); }
+        saveMarks();
+      }
+      render();
+    });
+    $('mPick').onclick = function(){ setMode('pick'); };
+    $('mMust').onclick = function(){ setMode('must'); };
+    $('mEx').onclick = function(){ setMode('ex'); };
+    $('bRange').onclick = function(){ sel = withMust(rangePool()); render(); };
+    $('bRand').onclick = function(){
+      var n = Math.max(1, +$('rn').value || 5);
+      var rest = Math.max(0, n - must.size);
+      sel = withMust(shuffle(rangePool().filter(function(i){ return !must.has(i); })).slice(0, rest));
+      render();
+      if (must.size > n) alert('必考題有 ' + must.size + ' 題，超過設定的 ' + n + ' 題，已全部放入。');
+    };
+    $('bClear').onclick = function(){ sel = Array.from(must).sort(byIdx); render(); };
+    $('bUnex').onclick = function(){
+      if (confirm('清除這一課所有「必考」和「排除」標記？')){ excl.clear(); must.clear(); saveMarks(); render(); }
+    };
+    $('lesson').onchange = function(e){ setLesson(LESSONS[+e.target.value]); };
+    $('bGo').onclick = function(){ if (sel.length) startQuiz(); };
+    $('bBack').onclick = function(){ $('quiz').classList.remove('show'); };
+    $('qlist').addEventListener('click', function(e){
+      var c = e.target.closest('.qc'); if (!c) return;
+      c.classList.toggle('open'); syncAllBtn();
+    });
+    $('bAll').onclick = function(){
+      var cs = cards(), openAll = !cs.every(function(c){ return c.classList.contains('open'); });
+      cs.forEach(function(c){ c.classList.toggle('open', openAll); });
+      syncAllBtn();
+    };
+    $('bSm').onclick = function(){ fs = Math.max(.7, +(fs - .1).toFixed(2)); applyFs(); };
+    $('bLg').onclick = function(){ fs = Math.min(1.6, +(fs + .1).toFixed(2)); applyFs(); };
+    $('dark').onclick = function(){ if (typeof toggleDarkMode === 'function') toggleDarkMode(); syncDarkBtn(); };
+    $('close').onclick = nq2Close;
+
+    // 右側「註釋小考」邊籤改開新版（舊 onclick="nqToggle()" 抽屜面板不再使用）
+    var tab = document.getElementById('note-quiz-tab');
+    if (tab){ tab.removeAttribute('onclick'); tab.onclick = nq2Open; }
+  }
+
+  /* ───────── 面板打開時隱藏右側邊籤 ───────── */
+  function initSideTabHide(){
+    var ids = ['cls-panel', 'display-panel', 'note-quiz-panel'];
+    var panels = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    function sync(){
+      var any = panels.some(function(p){ return p.classList.contains('open'); });
+      document.body.classList.toggle('v56-panel-open', any);
+    }
+    var mo = new MutationObserver(sync);
+    panels.forEach(function(p){ mo.observe(p, { attributes: true, attributeFilter: ['class'] }); });
+    sync();
+  }
+
+  window.nq2Open = nq2Open;
+  window.nq2Close = nq2Close;
+  window.nqToggle = nq2Open;          // 覆蓋 v55 的 nqToggle（實際生效版本＝本段）
+  window.nq2BuildLesson = buildLesson;
+
+  function boot(){ init(); initSideTabHide(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
 </body>
