@@ -10019,6 +10019,49 @@ body.v56-panel-open #display-tab,
 body.v56-panel-open #note-quiz-tab,
 body.v56-panel-open #wk-ink-tab,
 body.v56-panel-open #tp-close-blue-tab{ display:none !important; }
+/* 投影模式：右側第 3 格是「畫筆」（v51 的 #wk-ink-tab），「註釋小考」投影時移到第 5 格（關閉浮框下方） */
+body.v56-proj-open #note-quiz-tab{ top:calc(34% + 336px); }
+@media (max-width:820px){ body.v56-proj-open #note-quiz-tab{ top:calc(30% + 288px); } }
+
+/* 「註釋小考」邊籤外觀與其他邊籤統一（比照 v51-side-tabs-and-blue-close 的規格） */
+#note-quiz-tab{
+  width:38px; min-height:92px; box-sizing:border-box;
+  display:flex; align-items:center; justify-content:center;
+  padding:10px 7px; border-radius:10px 0 0 10px;
+  font-size:12px; font-weight:700; line-height:1.25; letter-spacing:2px;
+  text-orientation:mixed; opacity:.9; z-index:9802;
+  transition:background .2s, color .2s, opacity .2s;
+}
+#note-quiz-tab:hover{ background:#2c2218; color:#fff; opacity:1; }
+@media (max-width:820px){
+  #note-quiz-tab{ width:36px; min-height:84px; padding:9px 6px; font-size:11px; border-radius:9px 0 0 9px; top:calc(30% + 144px); }
+}
+
+/* 畫筆工具列：開啟後放在投影下方的黑色換頁列（左右兩組，中間留給 ← 頁碼 →），不擋投影畫面；
+   未開啟時整條隱藏（開關在右側「畫筆」邊籤）。 */
+#wk-ink-layer:not(.active) #wk-ink-toolbar{ display:none !important; }
+#wk-ink-layer.active #wk-ink-toolbar{
+  position:absolute !important; left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
+  height:var(--v56-foot-h, 77px); max-width:none !important; overflow:visible !important;
+  display:flex !important; align-items:center; justify-content:space-between; gap:10px;
+  padding:0 16px; border:0; border-radius:0; background:transparent; box-shadow:none;
+  -webkit-backdrop-filter:none; backdrop-filter:none; pointer-events:none;
+}
+#wk-ink-layer.active #wk-ink-toolbar > *{ pointer-events:auto; }
+#wk-ink-grp-l, #wk-ink-layer.active #wk-ink-extra{ display:flex; align-items:center; gap:8px; }
+#wk-ink-toolbar .wk-ink-btn, #wk-ink-toolbar .wk-ink-size{ min-height:44px; font-size:14px; padding:8px 12px; }
+#wk-ink-toolbar .wk-ink-color{ width:32px; height:32px; min-width:32px; }
+#wk-ink-eraser.on{ background:#efe6d2; color:#14100a; border-color:#efe6d2; }
+/* 窄畫面（例：iPad 直放 834px）：工具列按鈕縮緊，畫筆開啟時換頁鈕間距也縮小，避免左右兩組蓋到 ← 頁碼 → */
+@media (max-width:1000px){
+  #wk-ink-layer.active #wk-ink-toolbar{ padding:0 10px; }
+  #wk-ink-grp-l, #wk-ink-layer.active #wk-ink-extra{ gap:5px; }
+  #wk-ink-toolbar .wk-ink-btn, #wk-ink-toolbar .wk-ink-size{ font-size:13px; padding:8px 8px; }
+  #wk-ink-toolbar .wk-ink-color{ width:28px; height:28px; min-width:28px; }
+  body.ink-on #wk-fullscreen .wkfs-footer{ gap:12px; }
+}
+/* 不需要的選項：粗筆（螢光筆保留）、✕浮框 */
+#wk-ink-toolbar .wk-ink-size[onclick="wkInkSetSize(8)"], #wk-ink-closepop{ display:none !important; }
 </style>
 
 <div id="nq2" aria-label="註釋小考">
@@ -10410,6 +10453,134 @@ body.v56-panel-open #tp-close-blue-tab{ display:none !important; }
     var mo = new MutationObserver(sync);
     panels.forEach(function(p){ mo.observe(p, { attributes: true, attributeFilter: ['class'] }); });
     sync();
+    // 投影模式開關 → body.v56-proj-open（投影時「註釋小考」邊籤移到第 5 格，避開「畫筆」）
+    var fs = document.getElementById('wk-fullscreen');
+    if (fs){
+      // wkOpenProj()/wkCloseProj() 直接改 fs.style.display，所以看實際是否顯示，class 與 style 都監聽
+      var syncProj = function(){ document.body.classList.toggle('v56-proj-open', getComputedStyle(fs).display !== 'none'); };
+      new MutationObserver(syncProj).observe(fs, { attributes: true, attributeFilter: ['class', 'style'] });
+      syncProj();
+    }
+  }
+
+  /* ───────── 投影畫筆：改名「畫筆」、工具列移到下方換頁列、橡皮擦 ───────── */
+  function initInk(){
+    var tab = document.getElementById('wk-ink-tab');
+    if (tab){ tab.textContent = '畫筆'; tab.setAttribute('aria-label', '開啟或關閉畫筆'); }
+
+    // 工具列開關文字由 wkInkToggle()/wkCloseProj() 寫入「✎ 畫記／✎ 關閉畫記」，統一改成「畫筆」
+    var toggle = document.getElementById('wk-ink-toggle');
+    if (toggle){
+      var fixText = function(){ if (toggle.textContent.indexOf('畫記') >= 0) toggle.textContent = toggle.textContent.replace(/畫記/g, '畫筆'); };
+      new MutationObserver(fixText).observe(toggle, { childList: true, characterData: true, subtree: true });
+      fixText();
+    }
+
+    var layer = document.getElementById('wk-ink-layer');
+    var tb = document.getElementById('wk-ink-toolbar');
+    var extra = document.getElementById('wk-ink-extra');
+    var canvas = document.getElementById('wk-ink-canvas');
+    var fs = document.getElementById('wk-fullscreen');
+    var st = window.wkInkState;
+    if (!layer || !tb || !extra || !toggle || !canvas || !fs || !st) return;
+
+    // 左組：關閉畫筆／撤銷／清除本頁／橡皮擦；右組（原 #wk-ink-extra）：顏色、螢光筆、細、中
+    var left = document.createElement('div'); left.id = 'wk-ink-grp-l';
+    tb.insertBefore(left, tb.firstChild);
+    left.appendChild(toggle);
+    Array.prototype.slice.call(extra.querySelectorAll('.wk-ink-btn')).forEach(function(b){
+      if (/撤銷|清除本頁/.test(b.textContent)) left.appendChild(b);
+    });
+    var er = document.createElement('button');
+    er.type = 'button'; er.id = 'wk-ink-eraser'; er.className = 'wk-ink-btn'; er.textContent = '橡皮擦';
+    left.appendChild(er);
+
+    // 畫布只涵蓋投影內容區（標題列下緣 ～ 換頁列上緣），換頁列留給工具列與 ←→
+    function fitInk(){
+      var on = layer.classList.contains('active') && getComputedStyle(fs).display !== 'none';
+      var head = fs.querySelector('.wkfs-header'), foot = fs.querySelector('.wkfs-footer');
+      if (on && head && foot){
+        var top = head.getBoundingClientRect().bottom, f = foot.getBoundingClientRect().top;
+        canvas.style.top = top + 'px'; canvas.style.bottom = 'auto';
+        canvas.style.height = Math.max(1, f - top) + 'px';
+        layer.style.setProperty('--v56-foot-h', Math.max(44, Math.round(window.innerHeight - f)) + 'px');
+      } else {
+        canvas.style.top = ''; canvas.style.bottom = ''; canvas.style.height = '';
+      }
+      if (typeof wkInkSetupCanvas === 'function') wkInkSetupCanvas();
+    }
+    new MutationObserver(function(){ fitInk(); if (!layer.classList.contains('active')) setEraser(false); })
+      .observe(layer, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', function(){ if (layer.classList.contains('active')) fitInk(); });
+
+    // 橡皮擦：畫筆色設成透明當「擦除軌跡」，軌跡掃過的筆畫整筆刪除；放開後移除擦除軌跡本身
+    var ERASE = 'rgba(0,0,0,0)', saved = null;
+    function setEraser(on){
+      if (on){
+        if (!saved) saved = { color: st.color, size: st.size };
+        st.color = ERASE; st.size = 1;
+        er.classList.add('on');
+        document.querySelectorAll('.wk-ink-color').forEach(function(x){ x.classList.remove('on'); });
+      } else if (saved){
+        if (st.color === ERASE){           // 從橡皮擦改按「細／中」→ 恢復原本的顏色
+          st.color = saved.color;
+          document.querySelectorAll('.wk-ink-color').forEach(function(x){ x.classList.toggle('on', x.dataset.color === st.color); });
+        }
+        if (st.size === 1) st.size = saved.size; // 從橡皮擦改按顏色 → 恢復原本的粗細
+        saved = null;
+        er.classList.remove('on');
+      }
+    }
+    er.addEventListener('click', function(){ setEraser(!er.classList.contains('on')); });
+    ['wkInkColor', 'wkInkHighlighter', 'wkInkSetSize'].forEach(function(name){
+      var orig = window[name];
+      if (typeof orig === 'function') window[name] = function(){ var r = orig.apply(this, arguments); setEraser(false); return r; };
+    });
+
+    function segDist(px, py, ax, ay, bx, by){
+      var dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+      var t = L ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L)) : 0;
+      var x = ax + t * dx - px, y = ay + t * dy - py;
+      return Math.sqrt(x * x + y * y);
+    }
+    // 擦除：檢查「上一點 → 這一點」整段路徑（每 6px 取一點），手指／筆快速滑過也不會漏擦
+    var lastPt = null;
+    function eraseAt(e){
+      var r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+      var probes = [[px, py]];
+      if (lastPt){
+        var dx = px - lastPt[0], dy = py - lastPt[1], n = Math.ceil(Math.sqrt(dx * dx + dy * dy) / 6);
+        for (var m = 1; m < n; m++) probes.push([lastPt[0] + dx * m / n, lastPt[1] + dy * m / n]);
+      }
+      lastPt = [px, py];
+      var arr = wkInkCurrentStrokes(), hit = false;
+      for (var k = arr.length - 1; k >= 0; k--){
+        var s0 = arr[k];
+        if (!s0 || s0.color === ERASE || !s0.points) continue;
+        var R = 16 + (s0.size || 3) / 2, pts = s0.points, gone = false;
+        for (var q = 0; q < pts.length && !gone; q++){
+          var a = pts[q], b = pts[q + 1] || a;
+          for (var z = 0; z < probes.length; z++){
+            if (segDist(probes[z][0], probes[z][1], a.x * r.width, a.y * r.height, b.x * r.width, b.y * r.height) <= R){ gone = true; break; }
+          }
+        }
+        if (gone){ arr.splice(k, 1); hit = true; }
+      }
+      if (hit) wkInkRedraw();
+    }
+    function erasing(){ return st.active && st.color === ERASE; }
+    canvas.addEventListener('pointerdown', function(e){ lastPt = null; if (erasing()) eraseAt(e); });
+    canvas.addEventListener('pointermove', function(e){ if (erasing() && (e.buttons || st.drawing)) eraseAt(e); });
+    var cleanup = function(){
+      lastPt = null;
+      setTimeout(function(){
+        var arr = wkInkCurrentStrokes();
+        for (var k = arr.length - 1; k >= 0; k--) if (arr[k] && arr[k].color === ERASE) arr.splice(k, 1);
+        wkInkRedraw();
+      }, 0);
+    };
+    canvas.addEventListener('pointerup', cleanup);
+    canvas.addEventListener('pointercancel', cleanup);
   }
 
   window.nq2Open = nq2Open;
@@ -10417,7 +10588,7 @@ body.v56-panel-open #tp-close-blue-tab{ display:none !important; }
   window.nqToggle = nq2Open;          // 覆蓋 v55 的 nqToggle（實際生效版本＝本段）
   window.nq2BuildLesson = buildLesson;
 
-  function boot(){ init(); initSideTabHide(); }
+  function boot(){ init(); initSideTabHide(); initInk(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
