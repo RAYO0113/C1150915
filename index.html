@@ -13135,7 +13135,8 @@ body.dark-mode .v80-len.box .c { background:#241d16; }
   wkOpenProj = function () { var r = _v81proj.apply(this, arguments); foldYidong('wkfs-sections'); return r; };
 })();
 </script>
-<!-- ════ v82：依課表自動記錄上課進度（即時暫存＋下課結算；只加不刪） ════ -->
+<!-- ════ v82：依課表自動記錄上課進度（即時暫存＋下課結算；只加不刪）
+     v83：改為「每台裝置自行啟用」，預設關閉（分享給其他老師時不顯示、不記錄） ════ -->
 <style id="v82-progress-css">
 #v82-chip { position:fixed; left:8px; bottom:8px; z-index:9590; display:flex; align-items:center; gap:6px;
   max-width:min(460px, calc(100vw - 16px)); padding:4px 10px; border-radius:14px;
@@ -13212,7 +13213,7 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
       { wd:5, p:7, cls:'建一孝', lesson:'', normal:true, note:'' }
     ]
   };
-  var K = { live:'tp_live_v1', hist:'tp_hist_v1', ovr:'tp_override_v1', sched:'tp_schedule_v1', prep:'tp_prep_v1' };
+  var K = { live:'tp_live_v1', hist:'tp_hist_v1', ovr:'tp_override_v1', sched:'tp_schedule_v1', prep:'tp_prep_v1', on:'tp_enabled_v1' };
   var PRE = 10, POST = 5;           /* 上課前 10 分鐘算下一節；下課後 5 分鐘內仍算同一節 */
   var WD = ['日','一','二','三','四','五','六'];
   var V = window.V82 = { restoring:false, exporting:false };
@@ -13238,6 +13239,8 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
 
   function schedule() { var s = get(K.sched, null); return (s && s.periods && s.slots) ? s : DEFAULT_SCHEDULE; }
   function isPrep() { return get(K.prep, '') === ymd(now()); }
+  /* v83：只有在本裝置按過「啟用自動記錄」才運作（localStorage 'tp_enabled_v1'='1'） */
+  function isOn() { return get(K.on, '') === '1'; }
   function loadLive() { return get(K.live, null); }
   function saveLive(l) { put(K.live, l); }
   function loadHist() { var h = get(K.hist, []); return Array.isArray(h) ? h : []; }
@@ -13291,6 +13294,7 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
     put(K.live, null);
   }
   function ensureLive() {
+    if (!isOn()) return null;
     var d = now(), live = loadLive(), cur = currentSlot(d);
     if (live && (!cur || cur.key !== live.key)) { finalize(live); live = null; }
     if (!cur || !cur.cls || isPrep()) return live && cur && cur.key === live.key ? live : null;
@@ -13449,6 +13453,7 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
   var chipGo = null;
   function renderChip() {
     var chip = document.getElementById('v82-chip');
+    if (!isOn()) { if (chip) chip.remove(); return; }
     if (!chip) {
       chip = document.createElement('div'); chip.id = 'v82-chip';
       chip.innerHTML = '<span class="v82-dot"></span><span id="v82-chip-t"></span><span id="v82-chip-ok">✓ 已自動保存</span>' +
@@ -13487,6 +13492,11 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
     if (cur && cur.cls && typeof clsPick === 'function') clsCur = cur.cls;
     var panel = document.getElementById('cls-panel');
     if (panel && !panel.classList.contains('open')) clsToggle(); else if (typeof clsRender === 'function') clsRender();
+  };
+  V.enable = function () { put(K.on, '1'); tick(); if (typeof clsRender === 'function') clsRender(); };
+  V.disable = function () {
+    if (!confirm('停用後這台裝置不再自動記錄上課進度（已有的紀錄會保留，重新啟用即可看到）。確定停用？')) return;
+    put(K.on, null); tick(); if (typeof clsRender === 'function') clsRender();
   };
   V.togglePrep = function () { put(K.prep, isPrep() ? null : ymd(now())); tick(); renderBox(); };
   V.setOverride = function (cls) {
@@ -13534,6 +13544,11 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
       var head = panel.querySelector('.cls-head');
       panel.insertBefore(box, head ? head.nextSibling : panel.firstChild);
     }
+    if (!isOn()) {
+      box.innerHTML = '<div class="v82-row"><button type="button" onclick="V82.enable()">啟用自動記錄上課進度（本裝置）</button></div>' +
+        '<div class="v82-sub">依課表自動判斷班級並記住教到哪一句。只影響這台裝置的這個瀏覽器；其他老師的裝置不受影響。</div>';
+      return;
+    }
     var cur = currentSlot(), prep = isPrep(), d = now();
     var st;
     if (!cur) st = '今天週' + WD[d.getDay()] + ' ' + hm(d) + '：目前沒有排定課程';
@@ -13547,7 +13562,8 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
     box.innerHTML = '<div class="v82-now">' + esc(st) + '</div>' +
       '<div class="v82-row">' + sel +
       '<button type="button" class="' + (prep ? 'on' : '') + '" onclick="V82.togglePrep()">備課模式：' + (prep ? '開（今天不記錄）' : '關') + '</button>' +
-      '<button type="button" onclick="V82.toggleSched()">' + (schedOpen ? '收起課表' : '課表') + '</button></div>' +
+      '<button type="button" onclick="V82.toggleSched()">' + (schedOpen ? '收起課表' : '課表') + '</button>' +
+      '<button type="button" onclick="V82.disable()">本裝置停用</button></div>' +
       (cur ? '' : '<div class="v82-sub">非上課時間可正常使用網站，不會產生上課紀錄。</div>') +
       (schedOpen ? '<div id="v82-sched">' + schedHTML(cur) +
         '<div class="v82-row" style="margin-top:6px"><button type="button" onclick="V82.toggleSchedEdit()">' + (schedEdit ? '完成編輯' : '編輯課表') + '</button>' +
@@ -13563,6 +13579,7 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
   function renderClsAuto() {
     var panel = document.getElementById('cls-panel'); if (!panel || typeof clsCur === 'undefined') return;
     var el = document.getElementById('v82-cls-auto');
+    if (!isOn()) { if (el) el.remove(); return; }
     if (!el) {
       el = document.createElement('div'); el.id = 'v82-cls-auto';
       var tabs = document.getElementById('cls-tabs');
@@ -13630,6 +13647,7 @@ body.dark-mode #v82-cls-auto .v82-h { color:#e3a0a0; }
 
   function boot() {
     tick();
+    if (!isOn()) return;
     /* Safari 關閉／重新整理後：本節 session 仍在 → 自動回到最後位置 */
     var live = loadLive(), cur = currentSlot();
     if (live && cur && cur.key === live.key && live.lessonId && !isPrep()) {
