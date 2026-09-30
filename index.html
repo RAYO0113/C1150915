@@ -14897,5 +14897,24 @@ body.dark-mode .v92-sq, body.dark-mode .v92-save { color:#b8a58c; }
   fix(document);
 })();
 </script>
+<style id="v94-fsimg-css">
+/* v94：全螢幕投影時課文補充圖片依螢幕高度放大（老師 10/1：全螢幕 31px 上課，圖片被縮得很小）。
+   v90 的尺寸是固定像素（單圖最高 360px、圖組 200px），不隨字級／螢幕變化 → 全螢幕改用 vh。一般畫面不變。 */
+#wkfs-body .v90-fig img { height: 56vh; width: auto; max-width: 88%; max-height: none; object-fit: contain; }
+#wkfs-body .v90-fig.v90-big img { height: 68vh; max-width: 94%; }
+#wkfs-body .v90-grow { gap: 1.2vw; }
+#wkfs-body .v90-grow figure { max-width: none; }
+#wkfs-body .v90-grow img { height: 34vh; }
+#wkfs-body .v90-natural .v90-grow img { height: 46vh; }
+#wkfs-body .v90-banner { height: 30vh; }
+#wkfs-body .v90-cap, #wkfs-body .v90-gtitle { font-size: .62em; }
+</style>
+<script id="v94-ver-js">
+(function () {
+  window.APP_VERSION = 'V94';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+})();
+</script>
 </body>
 </html>
