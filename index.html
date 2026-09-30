@@ -13834,5 +13834,301 @@ body.dark-mode #v84-hw button.v84-c.v84-rv.done { background:#22385a; color:#a9c
   } catch (e) { console.warn('[v87] 語譯替換失敗', e); }
 })();
 </script>
+<!-- ════ v88：① 左下角版號（全螢幕投影隱藏）② 〈師說〉錯綜／回文動畫：去掉重複的「原句」列，原句直接拆開飛成動畫 ③ 交錯語次編號改 ①②③④→①③／②④（老師 9/30 指正）（只加不刪；v80 不動，本版包 wkRenderSlideHTML 接手 v80rx 頁） ════ -->
+<style id="v88-css">
+#v88-ver { position:fixed; left:8px; bottom:6px; z-index:9000; pointer-events:none; user-select:none;
+  font:600 12px/1 "Noto Sans TC",sans-serif; letter-spacing:.06em; color:rgba(110,90,66,.55); }
+body.dark-mode #v88-ver { color:rgba(220,200,170,.45); }
+body.v56-proj-open #v88-ver { display:none; }
+/* 原句直接放在舞台；出處改小字 */
+.v88-by { font-family:"Noto Sans TC",sans-serif; font-size:.5em; color:var(--mk-ink-soft,#6b5a42); letter-spacing:0; margin-left:.4em; white-space:nowrap; }
+.v88-byline { position:absolute; top:-2px; right:12px; font-size:calc(var(--base-size) * 1.6); line-height:1; }
+#wk-fullscreen .v88-byline { font-size:calc(var(--base-size) * 1.9); }
+.v88 .v73-stage { margin-top:6px; }
+.v88 .pc { white-space:nowrap; }
+.v88 .pu { transition:opacity .4s; }
+/* 交錯語次：一開始是整句 */
+.v80-ro.v88-inl { display:block; }
+.v80-ro.v88-inl .ck { border-color:transparent; background:none; padding:0; border-radius:0; }
+.v80-ro.v88-inl .ck i { display:none; }
+.v80-ro:not(.v88-inl) .pu { display:none; }
+/* 伸縮文身：一開始是整句 */
+.v80-len.v88-inl { display:block; }
+.v80-len.v88-inl .ln { display:inline; }
+.v80-len.v88-inl .c { width:auto; }
+.v80-len.v88-inl .cnt { display:none; }
+.v80-len:not(.v88-inl) .pu { display:none; }
+.v80-len .tc { display:inline-block; }
+/* 回文：一開始上下兩句連成一行 */
+.v88 .v73-hw .r2, .v88 .v73-hw .r2 .mid { opacity:1; }
+.v88 .v73-hw.v88-inl .row { display:inline; }
+.v88 .v73-hw.v88-inl .r2 { margin-top:0; }
+.v88 .v73-hw .k, .v88 .v73-hw .row > span { display:inline-block; }
+/* 說明可多行 */
+.v88 .v73-note { line-height:1.8; }
+</style>
+<script id="v88-js">
+(function () {
+  /* ── ① 版號：之後每一版只改這一行 ── */
+  window.APP_VERSION = 'V88';
+  function badge() {
+    if (document.getElementById('v88-ver')) return;
+    var d = document.createElement('div'); d.id = 'v88-ver'; d.textContent = window.APP_VERSION; document.body.appendChild(d);
+  }
+  if (document.body) badge(); else document.addEventListener('DOMContentLoaded', badge);
+
+  /* ── ② ③ 師說錯綜／回文 ── */
+  var T = (typeof TEXTBOOK !== 'undefined') && TEXTBOOK['師說'];
+  if (!T || typeof wkRenderSlideHTML !== 'function') return;
+
+  /* 例句與 v80 相同（取自既有 keyRhetoric 資料＝RAY PPT）；交錯語次改依原句順序編號，配對 1‧3／2‧4，說明為老師 9/30 指定措辭 */
+  var RO_HEAD = '原句的順序是①②③④，解釋時要改成①③、②④兩兩配對來讀；這種故意把語序錯開的寫法，就是「交錯語次」。';
+  var TYPES = [
+    { no:'(一)', name:'抽換詞面', def:'以同義的詞語取代形式整齊句子中的某些詞語。', cls:'v80-sm', ex:[
+      { k:'syn', src:'惠王用張儀之計，拔三川之地，西并巴、蜀，北收上郡，南取漢中，包九夷，制鄢、郢，東據成皋之險，割膏腴之壤。（李斯〈諫逐客書〉）',
+        toks:['惠王用張儀之計，',['拔'],'三川之地，西',['并'],'巴、蜀，北',['收'],'上郡，南',['取'],'漢中，',['包'],'九夷，',['制'],'鄢、郢，東',['據'],'成皋之險，',['割'],'膏腴之壤。'],
+        res:'取得', note:['拔、并、收、取、包、制、據、割皆為「取得」之同義詞。'] } ] },
+    { no:'(二)', name:'交錯語次', def:'上下兩句語詞的次序，故意弄得參差不齊。', cls:'v80-mid', ex:[
+      { k:'ro', src:'句讀之不知，惑之不解，或師焉，或不焉。（韓愈〈師說〉）', ck:[[1,'句讀之不知'],[2,'惑之不解'],[3,'或師焉'],[4,'或不焉']],
+        note:[RO_HEAD, '①句讀之不知，③或師焉：不懂句讀，有的人（指士大夫之子）會從師請教；', '②惑之不解，④或不焉：有疑惑解不開，有的人（指士大夫自身）卻不肯從師問學。'] },
+      { k:'ro', src:'惟江上之清風，與山間之明月，耳得之而為聲，目遇之而成色。（蘇軾〈赤壁賦〉）', ck:[[1,'惟江上之清風'],[2,'與山間之明月'],[3,'耳得之而為聲'],[4,'目遇之而成色']],
+        note:[RO_HEAD, '①惟江上之清風，③耳得之而為聲：耳朵聽到的（聽覺）；', '②與山間之明月，④目遇之而成色：眼睛看到的（視覺）。'] } ] },
+    { no:'(三)', name:'伸縮文身', def:'把字數相等的句子，故意布置成字數不等，使長句短句交相錯雜。', cls:'v80-mid', ex:[
+      { k:'len', src:'野芳發而幽香，佳木秀而繁陰，風霜高潔，水落而石出者，山間之四時也。（歐陽脩〈醉翁亭記〉）',
+        rows:['野芳發而幽香','佳木秀而繁陰','風霜高潔','水落而石出者'], hi:[2], tail:'山間之四時也' },
+      { k:'len', src:'春天像一篇巨製的駢儷文，而夏天像一首絕句。（簡媜〈夏之絕句〉）',
+        rows:['春天像一篇巨製的駢儷文','而夏天像一首絕句'], hi:[1], tail:'' } ] },
+    { no:'(四)', name:'變化句式', def:'將肯定句與否定句、直述句與疑問句，穿插寫入。', cls:'v80-mid', ex:[
+      { k:'pn', src:'婚後生活不是磚，不是石，不是泥，不是沙，而是容忍，是體貼，是寬恕，是犧牲。',
+        segs:['婚後生活',['n','不是磚'],'，',['n','不是石'],'，',['n','不是泥'],'，',['n','不是沙'],'，',['p','而是容忍'],'，',['p','是體貼'],'，',['p','是寬恕'],'，',['p','是犧牲'],'。'] },
+      { k:'pn', src:'那榆蔭下的一潭，不是清泉，是天上虹。（徐志摩〈再別康橋〉）',
+        segs:['那榆蔭下的一潭，',['n','不是清泉'],'，',['p','是天上虹'],'。'] } ] }
+  ];
+  var POEM = '潮隨暗浪雪山傾，遠浦漁舟釣月明。橋對寺門松徑小，檻當泉眼石波清。迢迢綠樹江天曉，靄靄紅霞晚日晴。遙望四邊雲接水，雪峰千點數鷗輕。';
+  var HUI_EX = [
+    { k:'swap', src:'弟子不必不如師，師不必賢於弟子。（韓愈〈師說〉）', r1:[['A','弟子'],['','不必不如'],['B','師'],['','，']], r2:[['B','師'],['','不必賢於'],['A','弟子'],['','。']] },
+    { k:'swap', src:'開車不喝酒，喝酒不開車', r1:[['A','開車'],['','不'],['B','喝酒'],['','，']], r2:[['B','喝酒'],['','不'],['A','開車']] },
+    { k:'swap', src:'讀書不忘救國，救國不忘讀書', r1:[['A','讀書'],['','不忘'],['B','救國'],['','，']], r2:[['B','救國'],['','不忘'],['A','讀書']] },
+    { k:'swap', src:'文章是案頭之山水，山水是地上之文章', r1:[['A','文章'],['','是案頭之'],['B','山水'],['','，']], r2:[['B','山水'],['','是地上之'],['A','文章']] },
+    { k:'poem', src:'蘇軾〈題金山寺迴文本〉', text:POEM, cls:'v80-sm' }
+  ];
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  /* 出處：src 末尾「（作者〈篇名〉）」 */
+  function by(src) { var m = src.match(/（([^（）]*〈[^〉]*〉)）$/); return m ? m[1] : ''; }
+  function body(src) { return src.replace(/（[^（）]*〈[^〉]*〉）$/, ''); }
+  /* 依序在句中找出各段，中間的標點另成 .pu；對不上就回傳 null（改用 v80 原版） */
+  function cut(text, parts) {
+    var out = [], at = 0;
+    for (var i = 0; i < parts.length; i++) {
+      var j = text.indexOf(parts[i], at); if (j < 0) return null;
+      if (j > at) out.push(['pu', text.slice(at, j)]);
+      out.push(['pc', parts[i], i]); at = j + parts[i].length;
+    }
+    if (at < text.length) out.push(['pu', text.slice(at)]);
+    return out;
+  }
+  function chars(s, cls) { return Array.from(s).map(function (c) { return '<span class="' + cls + '">' + esc(c) + '</span>'; }).join(''); }
+
+  var NSTEP = { syn:2, ro:3, len:2, pn:3, swap:3, poem:2 };
+  function exHTML(e) {
+    var h = '', b = by(e.src), txt = body(e.src), byInline = '';
+    var byBlock = b ? '<div class="v88-byline"><span class="v88-by" style="margin-left:0">（' + esc(b) + '）</span></div>' : '';
+    var srcRow = '';
+    if (e.k === 'syn') {
+      h = '<div class="v80-sy">' + e.toks.map(function (t) { return Array.isArray(t) ? '<span class="k kS">' + esc(t[0]) + '</span>' : esc(t); }).join('') + byInline + '</div>' +
+        '<div class="v80-syn">' + e.toks.filter(Array.isArray).map(function (t) { return '<span class="chip">' + esc(t[0]) + '</span>'; }).join('') +
+        '<span class="eq">＝</span><span class="res">' + esc(e.res) + '</span></div>';
+    } else if (e.k === 'ro') {
+      var sg = cut(txt, e.ck.map(function (c) { return c[1]; })); if (!sg) return null;
+      h = '<div class="v80-ro v88-inl">' + sg.map(function (s) {
+        if (s[0] === 'pu') return '<span class="pu">' + esc(s[1]) + '</span>';
+        var n = e.ck[s[2]][0];
+        return '<span class="ck pc g' + (n % 2 ? 1 : 2) + '" data-n="' + n + '">' + esc(s[1]) + '<i>' + n + '</i></span>';
+      }).join('') + '</div>';
+    } else if (e.k === 'len') {
+      var parts = e.rows.concat(e.tail ? [e.tail] : []), sl = cut(txt, parts); if (!sl) return null;
+      h = '<div class="v80-len v88-inl">' + sl.map(function (s) {
+        if (s[0] === 'pu') return '<span class="pu">' + esc(s[1]) + '</span>';
+        var i = s[2];
+        if (i >= e.rows.length) return '<div class="ln tail">' + chars(s[1], 'tc') + '</div>';
+        return '<div class="ln' + (e.hi.indexOf(i) >= 0 ? ' hi' : '') + '">' + chars(s[1], 'c') + '<span class="cnt">' + Array.from(s[1]).length + ' 字</span></div>';
+      }).join('') + '</div>';
+    } else if (e.k === 'pn') {
+      h = '<div class="v80-pn">' + e.segs.map(function (s) {
+        return Array.isArray(s) ? '<span class="seg ' + (s[0] === 'n' ? 'neg' : 'pos') + '">' + esc(s[1]) + '</span>' : esc(s); }).join('') + byInline + '</div>' +
+        '<div class="v80-leg"><span class="ln">否定句</span><span class="lp">肯定句</span></div>';
+    } else if (e.k === 'swap') {
+      var row = function (r, c) { return '<div class="row ' + c + '">' + r.map(function (t) {
+        return t[0] ? '<span class="k k' + t[0] + '" data-k="' + t[0] + '">' + esc(t[1]) + '</span>' : '<span class="' + (t[1].length > 1 ? 'mid' : 'pm') + '">' + esc(t[1]) + '</span>';
+      }).join('') + '</div>'; };
+      h = '<div class="v73-hw v88-inl">' + row(e.r1, 'r1') + row(e.r2, 'r2') + '</div>';
+    } else if (e.k === 'poem') {
+      srcRow = '<div class="v73-src">' + esc(e.src) + '</div>';
+      var cs = Array.from(e.text.replace(/[，。]/g, ''));
+      var lines = function (arr) { var out = []; for (var i = 0; i < arr.length; i += 7) out.push(arr.slice(i, i + 7).join('') + (i / 7 % 2 ? '。' : '，')); return out; };
+      var fwd = lines(cs), rev = lines(cs.slice().reverse());
+      var mark = function (L, first) { return L.map(function (l, i) {
+        var s = esc(l);
+        if (i === 0 && first) s = '<span class="ends">' + s.charAt(0) + '</span>' + s.slice(1);
+        if (i === L.length - 1 && !first) s = s.slice(0, -2) + '<span class="ends">' + s.slice(-2, -1) + '</span>' + s.slice(-1);
+        return s; }).join('<br>'); };
+      h = '<div class="v80-poem"><div class="pc"><div class="h">順讀</div>' + mark(fwd, false) + '</div>' +
+        '<div class="pc rev"><div class="h">由末字倒讀</div><div class="pc-t">' + mark(rev, true) + '</div></div></div>';
+    }
+    return srcRow + byBlock + '<div class="v73-stage">' + h + '<svg class="v73-svg"></svg></div>' +
+      (e.note ? '<div class="v73-note">' + e.note.map(esc).join('<br>') + '</div>' : '');
+  }
+  function tabName(e, i) { return '例' + '一二三四五六'[i]; }
+  function boxHTML(exs, cap, cls) {
+    var parts = exs.map(exHTML);
+    if (parts.some(function (p) { return p === null; })) return null;
+    var tabs = exs.length > 1 ? '<div class="v73-tabs">' + exs.map(function (e, i) {
+      return '<button class="v73-tab' + (i ? '' : ' on') + '" onclick="v88Show(this,' + i + ')">' + tabName(e, i) + '</button>'; }).join('') + '</div>' : '';
+    return '<div class="v73a v88 ' + (cls || '') + '" data-ex="0" data-st="0"><div class="v80-top">' + tabs +
+      '<div class="v73-ctrl"><button class="v73-btn" onclick="v88Step(this)">▶ 下一步</button>' +
+      '<button class="v73-btn rst" onclick="v88Reset(this)">↻ 重來</button><span class="v73-tip"></span></div></div>' +
+      exs.map(function (e, i) {
+        return '<div class="v73-ex' + (i ? '' : ' cur') + ' ' + (e.cls || '') + '" data-k="' + e.k + '" data-n="' + NSTEP[e.k] + '">' + parts[i] + '</div>'; }).join('') +
+      '<div class="v73-cap">' + esc(cap) + '</div></div>';
+  }
+  function slideHTML(s) {
+    var sub, def, box;
+    if (s.name === '錯綜') {
+      var t = TYPES[s.ti]; if (!t) return null;
+      sub = t.no + ' ' + t.name; def = t.def;
+      box = boxHTML(t.ex, '錯綜' + t.no + t.name + '：' + t.def, t.cls);
+    } else {
+      sub = '動畫（' + HUI_EX.length + ' 例）'; def = '上下兩句，詞彙大多相同，而詞序恰好相反（或循環往復）。';
+      box = boxHTML(HUI_EX, '回文：上下兩句，詞彙大多相同，而詞序恰好相反（或循環往復），形成往復迴環的趣味。', 'v80-mid');
+    }
+    if (box === null) return null;
+    return '<div class="wk-slide wks-keyrhet v73-kr v73-anim-slide v80-rx v88-rx">' +
+      '<div class="wks-kr-head"><span class="wks-kr-name">' + esc(s.name) + '</span><span class="wks-kr-sub">' + esc(sub) + '</span></div>' +
+      '<div class="v80-tdef">' + esc(def) + '</div>' + box + '</div>';
+  }
+  var _v88render = wkRenderSlideHTML;
+  wkRenderSlideHTML = function (slide) {
+    if (slide && slide.type === 'v80rx') {
+      try { var h = slideHTML(slide); if (h) return h; } catch (e) { console.warn('[v88] 錯綜／回文改版失敗，改用 v80', e); }
+    }
+    return _v88render.apply(this, arguments);
+  };
+
+  /* ── 動畫 ── */
+  function rel(el, base) { var x = 0, y = 0, n = el; while (n && n !== base) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { x:x, y:y, w:el.offsetWidth, h:el.offsetHeight }; }
+  function drawPath(svg, d, color) {
+    var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d); p.setAttribute('stroke', color); svg.appendChild(p);
+    var L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; void p.getBoundingClientRect(); p.classList.add('v73-draw');
+  }
+  /* FLIP：els 從舊位置飛到新位置（change() 負責改版面） */
+  function fly(els, change, dur) {
+    els = Array.prototype.slice.call(els);
+    var first = els.map(function (c) { return c.getBoundingClientRect(); });
+    change();
+    els.forEach(function (c, i) {
+      var a = first[i], b = c.getBoundingClientRect();
+      c.style.transition = 'none'; c.style.transform = 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px)';
+    });
+    void document.body.offsetWidth;
+    els.forEach(function (c, i) {
+      c.style.transition = 'transform ' + (dur || .9) + 's cubic-bezier(.5,0,.3,1) ' + (i * Math.min(0.02, 0.3 / els.length)) + 's'; c.style.transform = '';
+    });
+  }
+  function words(ex) { return Array.prototype.map.call(ex.querySelectorAll('.r1 .k'), function (k) { return '「' + k.textContent + '」'; }).join('與'); }
+  var TIPS = {
+    syn: function (ex, st) { return ['① 找出換用的字', '② 意思相同，都是「' + ex.querySelector('.res').textContent + '」'][st - 1]; },
+    ro: function (ex, st) { return ['① 原句依序標上 ①②③④', '② 依意思兩兩配對：①③／②④', '③ 原句寫成 ①②③④，要照 ①③、②④ 解釋——這就是交錯語次'][st - 1]; },
+    len: function (ex, st) { return ['① 把句子拆開，逐字排列', '② 字數不等，長短交錯'][st - 1]; },
+    pn: function (ex, st) { return ['① 否定句', '② 肯定句', '③ 肯定句與否定句穿插寫入'][st - 1]; },
+    swap: function (ex, st) { return ['① 拆成上下兩句，找出關鍵詞：' + words(ex), '② 下句把兩個詞的位置對調', '③ 位置互換、循環相對'][st - 1]; },
+    poem: function (ex, st) { return ['① 順讀全詩', '② 從最後一字倒著讀，也成一首詩'][st - 1]; }
+  };
+  function apply(ex, st) {
+    var k = ex.dataset.k, stage = ex.querySelector('.v73-stage'), svg = ex.querySelector('.v73-svg');
+    ex.classList.add('s' + st);
+    if (k === 'syn') {
+      if (st === 1) ex.querySelectorAll('.kS').forEach(function (x, i) { setTimeout(function () { x.classList.add('lit'); }, i * 220); });
+      if (st === 2) { ex.querySelector('.v80-syn').classList.add('show'); var n = ex.querySelector('.v73-note'); if (n) n.classList.add('show'); }
+    } else if (k === 'ro') {
+      var ro = ex.querySelector('.v80-ro');
+      if (st === 1) { fly(ro.querySelectorAll('.ck'), function () { ro.classList.remove('v88-inl'); }); setTimeout(function () { ro.classList.add('num'); }, 500); }
+      if (st === 2) {
+        var cks = Array.prototype.slice.call(ro.querySelectorAll('.ck'));
+        fly(cks, function () {
+          var ord = [1, 3, 2, 4];
+          ord.forEach(function (n, i) {
+            var c = cks.filter(function (x) { return +x.dataset.n === n; })[0]; ro.appendChild(c);
+            if (i === 1) { var sp = document.createElement('span'); sp.className = 'sep'; sp.textContent = '／'; ro.appendChild(sp); }
+          });
+        });
+        ro.classList.add('grp');
+      }
+      if (st === 3) { var nt = ex.querySelector('.v73-note'); if (nt) nt.classList.add('show'); }
+    } else if (k === 'len') {
+      var ln = ex.querySelector('.v80-len');
+      if (st === 1) fly(ln.querySelectorAll('.c, .tc'), function () { ln.classList.remove('v88-inl'); ln.classList.add('box'); }, .8);
+      if (st === 2) ln.classList.add('cnt-on');
+    } else if (k === 'pn') {
+      var pn = ex.querySelector('.v80-pn');
+      if (st === 1) pn.classList.add('s-neg');
+      if (st === 2) pn.classList.add('s-pos');
+    } else if (k === 'swap') {
+      var hw = ex.querySelector('.v73-hw');
+      if (st === 1) {
+        fly(hw.querySelectorAll('.row > span'), function () { hw.classList.remove('v88-inl'); }, .8);
+        setTimeout(function () { ex.querySelectorAll('.r1 .k').forEach(function (x) { x.classList.add('lit'); }); }, 700);
+      }
+      if (st === 2) ex.querySelectorAll('.r2 .k').forEach(function (t) {
+        var src = ex.querySelector('.r1 .k[data-k="' + t.dataset.k + '"]'), a = src.getBoundingClientRect(), b = t.getBoundingClientRect();
+        t.classList.add('lit'); t.style.transition = 'none'; t.style.transform = 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px)';
+        void t.offsetWidth; t.style.transition = 'transform 1s cubic-bezier(.5,0,.3,1), background .4s, color .4s'; t.style.transform = '';
+      });
+      if (st === 3) ['A', 'B'].forEach(function (key) {
+        var p = rel(ex.querySelector('.r1 .k[data-k="' + key + '"]'), stage), q = rel(ex.querySelector('.r2 .k[data-k="' + key + '"]'), stage);
+        drawPath(svg, 'M' + (p.x + p.w / 2) + ' ' + (p.y + p.h) + ' L' + (q.x + q.w / 2) + ' ' + q.y, key === 'A' ? '#1f5fa8' : '#c0392b');
+      });
+    } else if (k === 'poem') {
+      if (st === 2) ex.querySelector('.v80-poem').classList.add('show');
+    }
+  }
+  function syncBtn(box) {
+    var exs = box.querySelectorAll('.v73-ex'), ei = +box.dataset.ex, st = +box.dataset.st, n = +exs[ei].dataset.n, btn = box.querySelector('.v73-btn:not(.rst)');
+    btn.disabled = false;
+    btn.textContent = st < n ? '▶ 下一步' : (ei + 1 < exs.length ? '▶ 下一例' : '▶ 總結');
+    if (box.querySelector('.v73-cap.show')) { btn.disabled = true; btn.textContent = '✓ 完成'; }
+  }
+  var SRC = {};
+  function resetEx(ex) {
+    var id = ex.dataset.rid; if (!id) { id = ex.dataset.rid = 'r' + Math.random().toString(36).slice(2); }
+    if (!SRC[id]) SRC[id] = ex.innerHTML; else ex.innerHTML = SRC[id];
+    ex.className = ex.className.replace(/\bs\d\b/g, '').replace(/\s+/g, ' ').trim();
+    if (!/\bcur\b/.test(ex.className)) ex.className += ' cur';
+  }
+  function show(box, i) {
+    box.querySelectorAll('.v73-ex').forEach(function (e, j) { e.classList.toggle('cur', j === i); });
+    box.querySelectorAll('.v73-tab').forEach(function (t, j) { t.classList.toggle('on', j === i); });
+    resetEx(box.querySelectorAll('.v73-ex')[i]);
+    box.dataset.ex = i; box.dataset.st = 0;
+    box.querySelector('.v73-cap').classList.remove('show'); box.querySelector('.v73-tip').textContent = '';
+    syncBtn(box);
+  }
+  window.v88Show = function (el, i) { if (window.event) window.event.stopPropagation(); show(el.closest('.v73a'), i); };
+  window.v88Reset = function (btn) { if (window.event) window.event.stopPropagation(); show(btn.closest('.v73a'), +btn.closest('.v73a').dataset.ex); };
+  window.v88Step = function (btn) {
+    if (window.event) window.event.stopPropagation();
+    var box = btn.closest('.v73a'), exs = box.querySelectorAll('.v73-ex'), ei = +box.dataset.ex, st = +box.dataset.st, ex = exs[ei], n = +ex.dataset.n;
+    if (!ex.dataset.rid) resetEx(ex);
+    if (st >= n) {
+      if (ei + 1 < exs.length) { show(box, ei + 1); return; }
+      box.querySelector('.v73-cap').classList.add('show'); box.querySelector('.v73-tip').textContent = ''; syncBtn(box); return;
+    }
+    st++; box.dataset.st = st; apply(ex, st);
+    box.querySelector('.v73-tip').textContent = TIPS[ex.dataset.k](ex, st) || '';
+    syncBtn(box);
+  };
+})();
+</script>
 </body>
 </html>
