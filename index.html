@@ -15007,5 +15007,26 @@ body.dark-mode .v92-sq, body.dark-mode .v92-save { color:#b8a58c; }
   scan(document.documentElement);
 })();
 </script>
+<style id="v97-mobileimg-css">
+/* v97：手機（窄螢幕）圖片不撐破版面（老師 10/1：手機看火車線字很大、課文超出範圍，其他課不會）。
+   原因：v90「原比例圖組」（軋日機／永保安康車票／四色牌）固定高 260px、不換行，三張並排 795px ＞ 手機 390px，
+   把整頁撐寬 → 手機瀏覽器重新縮放，文字跑出畫面。只在 ≤700px 生效，電腦／投影版面不變。 */
+@media (max-width: 700px) {
+  .v90-grow { flex-wrap: wrap; }
+  .v90-grow figure { flex: 1 1 40%; max-width: 100%; min-width: 0; }
+  .v90-natural .v90-grow figure { flex: 0 1 auto; max-width: 100%; }
+  .v90-natural .v90-grow img,
+  #wkfs-body .v90-natural .v90-grow img { height: auto; max-height: 200px; max-width: 100%; width: auto; }
+  .v90-grow img, #wkfs-body .v90-grow img { max-width: 100%; }
+  .v90-fig img, #wkfs-body .v90-fig img, #wkfs-body .v90-fig.v90-big img { height: auto; max-height: 60vh; max-width: 100%; width: auto; }
+}
+</style>
+<script id="v97-ver-js">
+(function () {
+  window.APP_VERSION = 'V97';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+})();
+</script>
 </body>
 </html>
