@@ -14916,5 +14916,49 @@ body.dark-mode .v92-sq, body.dark-mode .v92-save { color:#b8a58c; }
   setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
 })();
 </script>
+<style id="v95-credit-css">
+/* v95：高解析替換圖的作者／授權小字（CC BY-SA 規定需標示；老師 10/1 挑選，來源見 source/…/補充圖片/高解析/來源與授權.md） */
+.v95-credit { font-size: 11px; color: #9a8b78; letter-spacing: .02em; margin-top: 2px; font-family: "Noto Sans TC", sans-serif; }
+.v90-banner .v95-credit { position: absolute; right: 8px; bottom: 6px; margin: 0; color: rgba(255,255,255,.85);
+  text-shadow: 0 1px 3px rgba(0,0,0,.7); pointer-events: none; }
+#wkfs-body .v95-credit { font-size: 13px; }
+/* 修正 v94：「大圖」（火車過木瓜溪、成群的冬候鳥）被 v90 的 max-height:440px 擋住，全螢幕沒有放大 */
+#wkfs-body .v90-fig.v90-big img { max-height: none; }
+</style>
+<script id="v95-credit-js">
+/* v95：版號；在指定圖片下方（橫幅則右下角）加作者／授權小字。以檔名比對，不改 v90 addon。 */
+(function () {
+  window.APP_VERSION = 'V95';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+
+  var CREDIT = {
+    '金針花海.jpg': '攝影：rita2253419／CC BY-SA 4.0／Wikimedia Commons',
+    '吉安稻田.jpg': '攝影：Fred Hsu／CC BY-SA 3.0／Wikimedia Commons',
+    '木瓜溪橋火車.jpg': '攝影：Irvin Chen／CC BY 2.0／Wikimedia Commons',
+    '苦楝.jpg': '攝影：Foxy Who／CC BY-SA 3.0／Wikimedia Commons'
+  };
+  function nameOf(u) { try { u = decodeURIComponent(u || ''); } catch (e) {} return u.split('/').pop().replace(/["')]+$/, ''); }
+  function tag(t) { var d = document.createElement('div'); d.className = 'v95-credit'; d.textContent = t; return d; }
+  function scan() {
+    document.querySelectorAll('.v90-banner:not([data-v95])').forEach(function (b) {
+      b.setAttribute('data-v95', '1');
+      var t = CREDIT[nameOf(b.getAttribute('data-src') || b.style.backgroundImage)];
+      if (t) b.appendChild(tag(t));
+    });
+    document.querySelectorAll('img.v90-zoom:not([data-v95])').forEach(function (im) {
+      im.setAttribute('data-v95', '1');
+      var t = CREDIT[nameOf(im.getAttribute('src'))];
+      if (!t) return;
+      var cap = im.parentNode.querySelector('.v90-cap');
+      if (cap) cap.parentNode.insertBefore(tag(t), cap.nextSibling); else im.parentNode.insertBefore(tag(t), im.nextSibling);
+    });
+  }
+  var p = false;
+  new MutationObserver(function () { if (p) return; p = true; setTimeout(function () { p = false; scan(); }, 40); })
+    .observe(document.body, { childList: true, subtree: true });
+  scan();
+})();
+</script>
 </body>
 </html>
