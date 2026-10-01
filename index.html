@@ -15186,7 +15186,7 @@ body.dark-mode #v98-cal .v98-ed h4, body.dark-mode #v98-cal .v98-up h4 { color:#
   var QK = { 1: '身為魚販', 2: '世說新語選', 3: '師說', 4: '珍珠奶茶', 5: '臺灣最美麗的火車線', 6: '論語選—子路曾皙冉有公西華侍坐' };
   var CCOL = ['#1f7a7a', '#c0662a', '#6b4aa0', '#3d8a3d'];   /* 四班顏色，依 CLS_LIST 順序 */
   var K = { data: 'exam_cal_v1', cls: 'exam_cal_cls_v1' };
-  var WD = ['一', '二', '三', '四', '五', '六', '日'];
+  var WD = ['日', '一', '二', '三', '四', '五', '六'];   /* v103：星期日開頭 */
   var exporting = false;
 
   function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
@@ -15198,7 +15198,7 @@ body.dark-mode #v98-cal .v98-ed h4, body.dark-mode #v98-cal .v98-up h4 { color:#
   function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function parse(s) { var a = s.split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
   function md(s) { var a = String(s).split('-'); return (+a[1]) + '/' + (+a[2]); }
-  function wdName(s) { return WD[(parse(s).getDay() + 6) % 7]; }
+  function wdName(s) { return WD[parse(s).getDay()]; }
   function list() { var a = get(K.data, []); return Array.isArray(a) ? a : []; }
   function uid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -15437,8 +15437,8 @@ body.dark-mode #v98-cal .v98-ed h4, body.dark-mode #v98-cal .v98-up h4 { color:#
       classes().map(function (c) { return '<button type="button" data-v98="f|' + esc(c) + '"' + (fCls === c ? ' class="on"' : '') + '><i style="background:' + ccol(c) + '"></i>' + esc(c) + '</button>'; }).join('') +
       '<span class="v98-lg">● 小圓點＝當天有國文課的班</span></div>';
     h += '<div class="v98-main"><div class="v98-grid">' + WD.map(function (w) { return '<div class="v98-wh">' + w + '</div>'; }).join('');
-    var first = new Date(y, mo, 1), start = new Date(y, mo, 1 - ((first.getDay() + 6) % 7));
-    var weeks = Math.ceil((((first.getDay() + 6) % 7) + new Date(y, mo + 1, 0).getDate()) / 7);
+    var first = new Date(y, mo, 1), start = new Date(y, mo, 1 - first.getDay());
+    var weeks = Math.ceil((first.getDay() + new Date(y, mo + 1, 0).getDate()) / 7);
     for (var i = 0; i < weeks * 7; i++) {
       var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), ds = ymd(d), wd = d.getDay();
       var cl = 'v98-d' + (d.getMonth() !== mo ? ' out' : '') + (wd === 0 || wd === 6 ? ' we' : '') + (ds === today ? ' today' : '') + (ds === sel ? ' sel' : '');
@@ -15925,6 +15925,17 @@ body.dark-mode #v98-cal .v102-qsum { color:#d6c2f5; }
 <script id="v102-ver-js">
 (function () {
   window.APP_VERSION = 'V102';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+})();
+</script>
+<style id="v103-css">
+/* v103：日曆改星期日開頭（老師 10/1：不習慣週一開頭）；週日、週六兩欄窄 */
+#v98-cal .v98-grid { grid-template-columns:.55fr repeat(5,1fr) .55fr; }
+</style>
+<script id="v103-ver-js">
+(function () {
+  window.APP_VERSION = 'V103';
   function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
   setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
 })();
