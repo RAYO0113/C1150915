@@ -15028,5 +15028,444 @@ body.dark-mode .v92-sq, body.dark-mode .v92-save { color:#b8a58c; }
   setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
 })();
 </script>
+<style id="v98-cal-css">
+/* v98：考試／作業日曆（老師 10/1：點日期 → 選交作業或考試、選第幾課；分四班顯示；主要排 A卷、習作） */
+#v98-open { display:block; margin:8px 12px 0; padding:9px 8px; border:1px solid #7a2e2e; border-radius:4px; background:#fbf3ea;
+  color:#7a2e2e; font-family:"Noto Serif TC",serif; font-size:14px; font-weight:700; letter-spacing:1px; cursor:pointer; flex-shrink:0; }
+#v98-open:hover { background:#7a2e2e; color:#fff; }
+#v98-cal { position:fixed; inset:0; z-index:9700; background:rgba(30,20,10,.45); display:none; align-items:center; justify-content:center; }
+#v98-cal.open { display:flex; }
+#v98-cal .v98-box { background:var(--surface,#fff); color:var(--ink,#1a1209); width:min(1120px,96vw); height:min(800px,94vh);
+  border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.35); display:flex; flex-direction:column; overflow:hidden; font-size:14px; }
+#v98-cal .v98-top { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#7a2e2e; color:#fff; flex-wrap:wrap; }
+#v98-cal .v98-top h3 { margin:0; font-family:"Noto Serif TC",serif; font-size:18px; letter-spacing:2px; min-width:130px; text-align:center; }
+#v98-cal .v98-top button { background:transparent; color:#fff; border:1px solid rgba(255,255,255,.6); border-radius:4px; padding:4px 10px; cursor:pointer; font-size:14px; }
+#v98-cal .v98-top .v98-sp { flex:1; }
+#v98-cal .v98-cls { display:flex; gap:4px; padding:8px 12px; flex-wrap:wrap; border-bottom:1px solid var(--border,#d4c4a8); align-items:center; }
+#v98-cal .v98-cls button { border:1px solid var(--border,#d4c4a8); background:transparent; color:var(--ink,#1a1209); border-radius:14px;
+  padding:4px 12px; cursor:pointer; font-family:"Noto Serif TC",serif; font-size:14px; }
+#v98-cal .v98-cls button.on { background:#7a2e2e; color:#fff; border-color:#7a2e2e; font-weight:700; }
+#v98-cal .v98-cls button i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
+#v98-cal .v98-cls .v98-lg { margin-left:auto; color:var(--muted,#7a6a55); font-size:12px; }
+#v98-cal .v98-main { flex:1; display:flex; min-height:0; }
+#v98-cal .v98-grid { flex:1; display:grid; grid-template-columns:repeat(5,1fr) .55fr .55fr; grid-template-rows:auto; grid-auto-rows:1fr;
+  min-width:0; overflow:auto; }
+#v98-cal .v98-wh { text-align:center; font-weight:700; padding:4px 0; background:var(--warm,#f5ede0); border-bottom:1px solid var(--border,#d4c4a8); font-size:13px; }
+#v98-cal .v98-d { border-right:1px solid var(--border,#e4d8c4); border-bottom:1px solid var(--border,#e4d8c4); padding:3px 4px; cursor:pointer;
+  min-height:70px; overflow:hidden; display:flex; flex-direction:column; gap:2px; position:relative; }
+#v98-cal .v98-d:hover { background:rgba(122,46,46,.06); }
+#v98-cal .v98-d.out { opacity:.4; }
+#v98-cal .v98-d.we { background:rgba(0,0,0,.025); }
+#v98-cal .v98-d.sel { outline:2px solid #7a2e2e; outline-offset:-2px; }
+#v98-cal .v98-dn { font-size:13px; font-weight:700; display:flex; align-items:center; gap:3px; }
+#v98-cal .v98-d.today .v98-dn b { background:#7a2e2e; color:#fff; border-radius:10px; padding:0 6px; }
+#v98-cal .v98-dn b { font-weight:700; }
+#v98-cal .v98-dot { width:7px; height:7px; border-radius:50%; display:inline-block; opacity:.8; }
+#v98-cal .v98-dots { margin-left:auto; display:flex; gap:2px; }
+#v98-cal .v98-pill { font-size:12px; line-height:1.35; border-radius:3px; padding:1px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-left:4px solid; background:#f3eee6; }
+#v98-cal .v98-pill.ex { background:#fbe4e1; color:#8a1f1f; font-weight:700; }
+#v98-cal .v98-pill.hw { background:#e3ecf8; color:#1e4d8c; }
+#v98-cal .v98-side { width:330px; border-left:1px solid var(--border,#d4c4a8); display:flex; flex-direction:column; min-height:0; }
+#v98-cal .v98-ed { padding:10px 12px; border-bottom:1px solid var(--border,#d4c4a8); overflow-y:auto; flex:0 1 auto; }
+#v98-cal .v98-ed h4, #v98-cal .v98-up h4 { margin:0 0 6px; font-family:"Noto Serif TC",serif; font-size:15px; color:#7a2e2e; }
+#v98-cal .v98-row { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0 8px; align-items:center; }
+#v98-cal .v98-row > span { font-size:12px; color:var(--muted,#7a6a55); width:100%; }
+#v98-cal .v98-row button { border:1px solid var(--border,#d4c4a8); background:transparent; color:var(--ink,#1a1209); border-radius:4px;
+  padding:5px 9px; cursor:pointer; font-size:14px; font-family:"Noto Serif TC",serif; }
+#v98-cal .v98-row button.on { background:#7a2e2e; color:#fff; border-color:#7a2e2e; font-weight:700; }
+#v98-cal .v98-row button.v98-l { min-width:38px; padding:5px 4px; }
+#v98-cal .v98-row button.v98-l small { display:block; font-size:10px; opacity:.8; max-width:52px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#v98-cal .v98-row input[type=text] { flex:1; min-width:120px; padding:5px 8px; border:1px solid var(--border,#d4c4a8); border-radius:4px;
+  font-size:14px; background:var(--surface,#fff); color:var(--ink,#1a1209); }
+#v98-cal .v98-add { width:100%; background:#7a2e2e; color:#fff; border:none; border-radius:4px; padding:8px; cursor:pointer;
+  font-size:15px; font-family:"Noto Serif TC",serif; font-weight:700; letter-spacing:2px; }
+#v98-cal .v98-add:disabled { opacity:.4; cursor:default; }
+#v98-cal .v98-has { margin-top:8px; }
+#v98-cal .v98-it { display:flex; align-items:center; gap:6px; padding:4px 0; border-bottom:1px dashed var(--border,#e4d8c4); font-size:13px; }
+#v98-cal .v98-it .v98-tx { flex:1; min-width:0; }
+#v98-cal .v98-it .v98-tg { color:#fff; border-radius:3px; padding:0 5px; font-size:12px; font-weight:700; white-space:nowrap; }
+#v98-cal .v98-it button { border:none; background:transparent; color:#a33; cursor:pointer; font-size:15px; padding:0 4px; }
+#v98-cal .v98-up { flex:1 0 150px; overflow-y:auto; padding:10px 12px; }
+#v98-cal .v98-ud { font-weight:700; font-size:13px; margin:6px 0 2px; cursor:pointer; }
+#v98-cal .v98-empty { color:var(--muted,#7a6a55); font-size:13px; }
+#v98-cal .v98-hint { color:var(--muted,#7a6a55); font-size:12px; }
+@media (max-width:820px) {
+  #v98-cal .v98-main { flex-direction:column; overflow-y:auto; }
+  #v98-cal .v98-grid { flex:none; grid-auto-rows:minmax(64px,auto); overflow:visible; }
+  #v98-cal .v98-side { width:auto; border-left:none; border-top:1px solid var(--border,#d4c4a8); }
+  #v98-cal .v98-ed { max-height:none; }
+  #v98-cal .v98-pill { font-size:10px; padding:0 2px; }
+}
+body.dark-mode #v98-open { background:transparent; color:#e3a0a0; border-color:#e3a0a0; }
+body.dark-mode #v98-cal .v98-pill { background:#3a332b; }
+body.dark-mode #v98-cal .v98-pill.ex { background:#5a2a26; color:#ffc9c2; }
+body.dark-mode #v98-cal .v98-pill.hw { background:#22385a; color:#bcd5f5; }
+body.dark-mode #v98-cal .v98-ed h4, body.dark-mode #v98-cal .v98-up h4 { color:#e3a0a0; }
+</style>
+<script id="v98-cal-js">
+(function () {
+  /* 課次同 v84（L1～L6 依 source/115-1/高職/第一冊 教材檔名）；L7 以後尚未建課，只顯示課次 */
+  var LESSONS = { 1: '身為魚販', 2: '世說新語選', 3: '師說', 4: '珍珠奶茶', 5: '火車線', 6: '侍坐' };
+  var MAXL = 12;
+  var KINDS = ['考試', '交作業'];
+  var ITEMS = ['A卷', '習作', '課後習題', '其他'];
+  var CCOL = ['#1f7a7a', '#c0662a', '#6b4aa0', '#3d8a3d'];   /* 四班顏色，依 CLS_LIST 順序 */
+  var K = { data: 'exam_cal_v1', cls: 'exam_cal_cls_v1' };
+  var WD = ['一', '二', '三', '四', '五', '六', '日'];
+  var exporting = false;
+
+  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { alert('儲存失敗，可能是瀏覽器限制。'); return false; } }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function classes() { return (typeof CLS_LIST !== 'undefined' && CLS_LIST) || []; }
+  function ccol(c) { var i = classes().indexOf(c); return CCOL[i < 0 ? 0 : i % CCOL.length]; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parse(s) { var a = s.split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
+  function md(s) { var a = String(s).split('-'); return (+a[1]) + '/' + (+a[2]); }
+  function wdName(s) { return WD[(parse(s).getDay() + 6) % 7]; }
+  function list() { var a = get(K.data, []); return Array.isArray(a) ? a : []; }
+  function uid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  /* 當天有國文課的班級：讀 V82 課表（老師改過的 tp_schedule_v1 優先，否則 V82 預設課表的同一份資料） */
+  var DEF_SLOTS = [[1,'冷一孝'],[1,'冷一忠'],[1,'建一忠'],[1,'建一孝'],[2,'建一孝'],[3,'冷一孝'],[3,'冷一忠'],
+    [4,'建一孝'],[4,'冷一孝'],[4,'建一忠'],[5,'建一忠'],[5,'冷一忠'],[5,'建一孝']];
+  function meets(dateStr) {
+    var wd = parse(dateStr).getDay(), s = get('tp_schedule_v1', null), out = {};
+    if (s && s.slots) s.slots.forEach(function (x) { if (x.wd === wd && x.normal !== false && x.cls) out[x.cls] = 1; });
+    else DEF_SLOTS.forEach(function (x) { if (x[0] === wd) out[x[1]] = 1; });
+    return out;
+  }
+
+  function lesText(ls) {
+    ls = (ls || []).slice().sort(function (a, b) { return a - b; });
+    if (!ls.length) return '';
+    /* 連續的課併成區間：L1、L2、L3 → L1–3 */
+    var out = [], i = 0;
+    while (i < ls.length) { var j = i; while (j + 1 < ls.length && ls[j + 1] === ls[j] + 1) j++; out.push('L' + ls[i] + (j > i ? '–' + ls[j] : '')); i = j + 1; }
+    return out.join('、');
+  }
+  function lesLong(ls) {
+    return (ls || []).slice().sort(function (a, b) { return a - b; })
+      .map(function (n) { return 'L' + n + (LESSONS[n] ? ' ' + LESSONS[n] : ''); }).join('、');
+  }
+  function label(e) {
+    var it = e.item === '其他' ? (e.note || '其他') : e.item;
+    var s = it + (e.lessons && e.lessons.length ? ' ' + lesText(e.lessons) : '') + ' ' + (e.kind === '考試' ? '考' : '交');
+    if (e.item !== '其他' && e.note) s += '（' + e.note + '）';
+    return s;
+  }
+
+  /* 狀態 */
+  var view = null;           /* 目前月份第一天 */
+  var sel = null;            /* 選取的日期字串 */
+  var fCls = get(K.cls, '');  /* 篩選班級，空＝全部 */
+  var form = { cls: [], kind: '考試', item: 'A卷', les: [], note: '' };
+
+  function ensure() {
+    var m = document.getElementById('v98-cal'); if (m) return m;
+    m = document.createElement('div'); m.id = 'v98-cal';
+    m.innerHTML = '<div class="v98-box"></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function (e) {
+      if (e.target === m) { close(); return; }
+      var b = e.target.closest && e.target.closest('[data-v98]'); if (!b) return;
+      var a = b.getAttribute('data-v98').split('|'), t = a[0];
+      if (t === 'x') close();
+      else if (t === 'm') { view = new Date(view.getFullYear(), view.getMonth() + (+a[1]), 1); render(); }
+      else if (t === 't') { var n = new Date(); view = new Date(n.getFullYear(), n.getMonth(), 1); pick(ymd(n)); }
+      else if (t === 'f') { fCls = a[1]; put(K.cls, fCls); render(); }
+      else if (t === 'd') pick(a[1]);
+      else if (t === 'fc') { tog(form.cls, a[1]); render(); }
+      else if (t === 'fca') { form.cls = form.cls.length === classes().length ? [] : classes().slice(); render(); }
+      else if (t === 'fk') { form.kind = a[1]; render(); }
+      else if (t === 'fi') { form.item = a[1]; render(); }
+      else if (t === 'fl') { tog(form.les, +a[1]); render(); }
+      else if (t === 'add') add();
+      else if (t === 'del') del(a[1]);
+    });
+    m.addEventListener('input', function (e) { if (e.target.id === 'v98-note') { form.note = e.target.value; syncAdd(); } });
+    /* 不讓 ←→ 等鍵觸發課文換頁；Esc 關閉 */
+    m.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); } e.stopPropagation(); });
+    return m;
+  }
+  function tog(arr, v) { var i = arr.indexOf(v); if (i < 0) arr.push(v); else arr.splice(i, 1); }
+
+  function pick(d) {
+    sel = d;
+    var v = parse(d);
+    if (!view || v.getMonth() !== view.getMonth() || v.getFullYear() !== view.getFullYear()) view = new Date(v.getFullYear(), v.getMonth(), 1);
+    /* 預設班級：有篩選就用該班；否則用當天有課的班 */
+    if (fCls) form.cls = [fCls];
+    else { var mt = meets(d); form.cls = classes().filter(function (c) { return mt[c]; }); }
+    render();
+  }
+
+  function valid() { return sel && form.cls.length && (form.item !== '其他' ? form.les.length : form.note.trim()); }
+  function syncAdd() { var b = document.querySelector('#v98-cal .v98-add'); if (b) b.disabled = !valid(); }
+
+  function add() {
+    if (!valid()) return;
+    var a = list();
+    form.cls.forEach(function (c) {
+      a.push({ id: uid(), date: sel, cls: c, kind: form.kind, item: form.item, lessons: form.les.slice(), note: form.note.trim() });
+    });
+    put(K.data, a);
+    form.note = ''; form.les = [];
+    render();
+  }
+  function del(id) {
+    var a = list(), e = a.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    if (!confirm('刪除「' + md(e.date) + ' ' + e.cls + '・' + label(e) + '」？')) return;
+    put(K.data, a.filter(function (x) { return x.id !== id; }));
+    render();
+  }
+
+  function shown(e) { return !fCls || e.cls === fCls; }
+  function byDay() {
+    var m = {}, order = classes();
+    list().forEach(function (e) { if (shown(e)) (m[e.date] = m[e.date] || []).push(e); });
+    Object.keys(m).forEach(function (k) { m[k].sort(function (a, b) { return order.indexOf(a.cls) - order.indexOf(b.cls) || (a.kind < b.kind ? -1 : 1); }); });
+    return m;
+  }
+  function tag(c) { return '<span class="v98-tg" style="background:' + ccol(c) + '">' + esc(c) + '</span>'; }
+
+  function render() {
+    var m = ensure(), box = m.querySelector('.v98-box');
+    var y = view.getFullYear(), mo = view.getMonth(), today = ymd(new Date()), days = byDay();
+    var h = '<div class="v98-top"><button type="button" data-v98="m|-1">◀</button><h3>' + y + ' 年 ' + (mo + 1) + ' 月</h3>' +
+      '<button type="button" data-v98="m|1">▶</button><button type="button" data-v98="t">今天</button>' +
+      '<span class="v98-sp"></span><span style="font-family:\'Noto Serif TC\',serif;font-weight:700;letter-spacing:2px">考試／作業日曆</span>' +
+      '<span class="v98-sp"></span><button type="button" data-v98="x">✕ 關閉</button></div>';
+    h += '<div class="v98-cls"><button type="button" data-v98="f|"' + (fCls ? '' : ' class="on"') + '>四班全部</button>' +
+      classes().map(function (c) { return '<button type="button" data-v98="f|' + esc(c) + '"' + (fCls === c ? ' class="on"' : '') + '><i style="background:' + ccol(c) + '"></i>' + esc(c) + '</button>'; }).join('') +
+      '<span class="v98-lg">● 小圓點＝當天有國文課的班</span></div>';
+    h += '<div class="v98-main"><div class="v98-grid">' + WD.map(function (w) { return '<div class="v98-wh">' + w + '</div>'; }).join('');
+    var first = new Date(y, mo, 1), start = new Date(y, mo, 1 - ((first.getDay() + 6) % 7));
+    var weeks = Math.ceil((((first.getDay() + 6) % 7) + new Date(y, mo + 1, 0).getDate()) / 7);
+    for (var i = 0; i < weeks * 7; i++) {
+      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), ds = ymd(d), wd = d.getDay();
+      var cl = 'v98-d' + (d.getMonth() !== mo ? ' out' : '') + (wd === 0 || wd === 6 ? ' we' : '') + (ds === today ? ' today' : '') + (ds === sel ? ' sel' : '');
+      var mt = meets(ds), dots = classes().filter(function (c) { return mt[c] && (!fCls || c === fCls); })
+        .map(function (c) { return '<i class="v98-dot" title="' + esc(c) + ' 有課" style="background:' + ccol(c) + '"></i>'; }).join('');
+      h += '<div class="' + cl + '" data-v98="d|' + ds + '"><div class="v98-dn"><b>' + d.getDate() + '</b><span class="v98-dots">' + dots + '</span></div>' +
+        (days[ds] || []).map(function (e) {
+          return '<div class="v98-pill ' + (e.kind === '考試' ? 'ex' : 'hw') + '" style="border-left-color:' + ccol(e.cls) + '" title="' + esc(e.cls + '・' + label(e)) + '">' +
+            (fCls ? '' : esc(e.cls.replace('一', '')) + ' ') + esc(label(e)) + '</div>';
+        }).join('') + '</div>';
+    }
+    h += '</div><div class="v98-side">' + editor() + upcoming() + '</div></div>';
+    box.innerHTML = h;
+    syncAdd();
+  }
+
+  function editor() {
+    if (!sel) return '<div class="v98-ed"><h4>新增安排</h4><div class="v98-empty">先在左邊點一個日期。</div></div>';
+    var mt = meets(sel), cs = classes();
+    var h = '<div class="v98-ed"><h4>' + md(sel) + '（' + wdName(sel) + '）新增安排</h4>';
+    h += '<div class="v98-row"><span>班級（可複選；● 當天有課）</span>' + cs.map(function (c) {
+      return '<button type="button" data-v98="fc|' + esc(c) + '"' + (form.cls.indexOf(c) >= 0 ? ' class="on"' : '') + '>' +
+        (mt[c] ? '<i class="v98-dot" style="background:' + ccol(c) + ';margin-right:3px"></i>' : '') + esc(c) + '</button>';
+    }).join('') + '<button type="button" data-v98="fca">' + (form.cls.length === cs.length ? '全不選' : '四班') + '</button></div>';
+    h += '<div class="v98-row"><span>類型</span>' + KINDS.map(function (k) { return '<button type="button" data-v98="fk|' + k + '"' + (form.kind === k ? ' class="on"' : '') + '>' + k + '</button>'; }).join('') + '</div>';
+    h += '<div class="v98-row"><span>項目</span>' + ITEMS.map(function (k) { return '<button type="button" data-v98="fi|' + k + '"' + (form.item === k ? ' class="on"' : '') + '>' + k + '</button>'; }).join('') + '</div>';
+    h += '<div class="v98-row"><span>第幾課（可複選）</span>';
+    for (var n = 1; n <= MAXL; n++) h += '<button type="button" class="v98-l' + (form.les.indexOf(n) >= 0 ? ' on' : '') + '" data-v98="fl|' + n + '">L' + n + (LESSONS[n] ? '<small>' + esc(LESSONS[n]) + '</small>' : '') + '</button>';
+    h += '</div>';
+    h += '<div class="v98-row"><input type="text" id="v98-note" value="' + esc(form.note) + '" placeholder="' + (form.item === '其他' ? '內容（必填，例：第一次段考）' : '備註（可不填）') + '"></div>';
+    h += '<button type="button" class="v98-add" data-v98="add">＋ 加入</button>';
+    var items = list().filter(function (e) { return e.date === sel; }).sort(function (a, b) { return cs.indexOf(a.cls) - cs.indexOf(b.cls); });
+    h += '<div class="v98-has">' + (items.length ? items.map(function (e) {
+      return '<div class="v98-it">' + tag(e.cls) + '<span class="v98-tx" title="' + esc(lesLong(e.lessons)) + '">' + esc(label(e)) + '</span><button type="button" data-v98="del|' + e.id + '" title="刪除">✕</button></div>';
+    }).join('') : '<div class="v98-hint">這天還沒有安排。</div>') + '</div></div>';
+    return h;
+  }
+
+  function upcoming() {
+    var t = ymd(new Date()), end = ymd(new Date(Date.now() + 21 * 864e5)), days = byDay();
+    var ks = Object.keys(days).filter(function (k) { return k >= t && k <= end; }).sort();
+    return '<div class="v98-up"><h4>接下來三週</h4>' + (ks.length ? ks.map(function (k) {
+      return '<div class="v98-ud" data-v98="d|' + k + '">' + md(k) + '（' + wdName(k) + '）' + (k === t ? ' 今天' : '') + '</div>' +
+        days[k].map(function (e) { return '<div class="v98-it">' + tag(e.cls) + '<span class="v98-tx">' + esc(label(e)) + '</span><button type="button" data-v98="del|' + e.id + '" title="刪除">✕</button></div>'; }).join('');
+    }).join('') : '<div class="v98-empty">三週內沒有安排。</div>') + '</div>';
+  }
+
+  function open() {
+    var n = new Date();
+    if (!view) view = new Date(n.getFullYear(), n.getMonth(), 1);
+    ensure().classList.add('open');
+    render();
+  }
+  function close() { var m = document.getElementById('v98-cal'); if (m) m.classList.remove('open'); }
+
+  /* 「班級進度」面板頂端加入口按鈕 */
+  function addBtn() {
+    var p = document.getElementById('cls-panel'); if (!p || document.getElementById('v98-open')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'v98-open'; b.textContent = '📅 考試／作業日曆';
+    b.onclick = open;
+    var head = p.querySelector('.cls-head');
+    p.insertBefore(b, head ? head.nextSibling : p.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addBtn); else addBtn();
+
+  /* 備份：匯出附帶 __v98cal；匯入時只補本機沒有的項目（依 id），不覆蓋 */
+  var _v98load = clsLoad;
+  clsLoad = function () { var d = _v98load.apply(this, arguments); if (exporting) d.__v98cal = list(); return d; };
+  var _v98exp = clsExport;
+  clsExport = function () { exporting = true; try { return _v98exp.apply(this, arguments); } finally { exporting = false; } };
+  var _v98save = clsSave;
+  clsSave = function (d) {
+    if (d && d.__v98cal) {
+      var cur = list(), have = {}; cur.forEach(function (e) { have[e.id] = 1; });
+      (Array.isArray(d.__v98cal) ? d.__v98cal : []).forEach(function (e) { if (e && e.id && !have[e.id]) cur.push(e); });
+      put(K.data, cur); delete d.__v98cal;
+    }
+    return _v98save.apply(this, arguments);
+  };
+
+  window.V98CAL = { open: open, close: close, data: list };
+})();
+</script>
+<script id="v98-ver-js">
+(function () {
+  window.APP_VERSION = 'V98';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+})();
+</script>
+<style id="v99-link-css">
+/* v99：考試日曆 ↔ V84 完成紀錄 連動 */
+#v98-cal .v98-pill.v99-done { opacity:.55; text-decoration:line-through; }
+#v98-cal .v98-it button.v99-ck { color:var(--muted,#7a6a55); border:1px solid var(--border,#d4c4a8); border-radius:4px; font-size:13px; padding:1px 6px; white-space:nowrap; }
+#v98-cal .v98-it button.v99-ck.on { background:#e3f1e7; color:#1f6b3a; border-color:#8cc29f; font-weight:700; }
+#v98-cal .v98-it.v99-done .v98-tx { text-decoration:line-through; opacity:.6; }
+#v84-hw button.v84-c .v99-plan { display:block; font-size:11px; color:#a33; font-weight:700; }
+body.dark-mode #v98-cal .v98-it button.v99-ck.on { background:#244a33; color:#9fe0b4; }
+body.dark-mode #v84-hw button.v84-c .v99-plan { color:#ffb3a8; }
+</style>
+<script id="v99-link-js">
+(function () {
+  /* 課次 → V84 課名（同 v84 LESSONS）；L7 以後 V84 沒有格子，完成狀態記在日曆項目本身（e.done） */
+  var LK = { 1: '身為魚販', 2: '世說新語選', 3: '師說', 4: '珍珠奶茶', 5: '臺灣最美麗的火車線', 6: '論語選—子路曾皙冉有公西華侍坐' };
+  var NO = {}; Object.keys(LK).forEach(function (n) { NO[LK[n]] = +n; });
+  var V84ITEMS = ['A卷', '習作', '課後習題'];
+  var K = { cal: 'exam_cal_v1', hw: 'hw_done_v1' };
+
+  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { alert('儲存失敗，可能是瀏覽器限制。'); return false; } }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function md(s) { var a = String(s).split('-'); return (+a[1]) + '/' + (+a[2]); }
+  function cal() { var a = get(K.cal, []); return Array.isArray(a) ? a : []; }
+
+  /* 考試＋A卷／習作／課後習題＋課次都在 L1～L6 → 與 V84「考試」格連動 */
+  function linked(e) {
+    return e.kind === '考試' && V84ITEMS.indexOf(e.item) >= 0 && e.lessons && e.lessons.length &&
+      e.lessons.every(function (n) { return LK[n]; });
+  }
+  function isDone(e, hw) {
+    if (!linked(e)) return !!e.done;
+    hw = hw || get(K.hw, {});
+    return e.lessons.every(function (n) { var r = (hw[LK[n]] || {})[e.cls] || {}; return !!r[e.item + '|考試']; });
+  }
+  function toggle(id) {
+    var a = cal(), e = a.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    var done = isDone(e), when = e.date <= today() ? e.date : today();
+    if (done && !confirm('取消「' + e.cls + '・' + e.item + '」的完成紀錄？' + (linked(e) ? '\n（「完成紀錄」表格的考試格也會一起取消）' : ''))) return;
+    if (linked(e)) {
+      var hw = get(K.hw, {});
+      e.lessons.forEach(function (n) {
+        var r = ((hw[LK[n]] = hw[LK[n]] || {})[e.cls] = hw[LK[n]][e.cls] || {}), key = e.item + '|考試';
+        if (done) delete r[key]; else if (!r[key]) r[key] = when;
+      });
+      put(K.hw, hw);
+    } else {
+      if (done) delete e.done; else e.done = when;
+      put(K.cal, a);
+    }
+    if (window.V98CAL) V98CAL.open();      /* 重新畫日曆（月份、選取日期不變） */
+    if (typeof clsRender === 'function' && document.getElementById('cls-panel')) clsRender();
+  }
+
+  var busy = false;
+  /* 日曆：右側清單加「完成」鈕；格子內已完成的項目淡化＋刪除線 */
+  function decoCal() {
+    var box = document.querySelector('#v98-cal .v98-box'); if (!box) return;
+    var a = cal(), hw = get(K.hw, {}), byId = {}, doneKey = {};
+    a.forEach(function (e) { byId[e.id] = e; if (isDone(e, hw)) doneKey[e.date + '|' + e.cls] = (doneKey[e.date + '|' + e.cls] || 0) + 1; });
+    box.querySelectorAll('.v98-it').forEach(function (it) {
+      if (it.querySelector('.v99-ck')) return;
+      var del = it.querySelector('button[data-v98^="del|"]'); if (!del) return;
+      var e = byId[del.getAttribute('data-v98').slice(4)]; if (!e) return;
+      var d = isDone(e, hw), b = document.createElement('button');
+      b.type = 'button'; b.className = 'v99-ck' + (d ? ' on' : ''); b.setAttribute('data-v99', e.id);
+      b.textContent = d ? '✓ 完成' : '完成'; b.title = d ? '已完成（點一下可取消）' : '標記完成' + (linked(e) ? '（同步到完成紀錄）' : '');
+      it.insertBefore(b, del);
+      if (d) it.classList.add('v99-done');
+    });
+    /* 格子：依「日期｜班｜顯示文字」比對（同日同班同內容視為同一筆） */
+    var cells = box.querySelectorAll('.v98-d');
+    cells.forEach(function (c) {
+      var ds = (c.getAttribute('data-v98') || '').slice(2);
+      c.querySelectorAll('.v98-pill').forEach(function (p) {
+        if (p.hasAttribute('data-v99d')) return; p.setAttribute('data-v99d', '1');
+        var t = p.getAttribute('title') || '', cls = t.split('・')[0];
+        var match = a.filter(function (e) { return e.date === ds && e.cls === cls && t === cls + '・' + labelOf(p, t); });
+        if (match.length && match.every(function (e) { return isDone(e, hw); })) { p.classList.add('v99-done'); p.title = t + '（已完成）'; }
+      });
+    });
+  }
+  function labelOf(p, t) { return t.slice(t.indexOf('・') + 1); }
+
+  /* 完成紀錄表格：尚未完成的「考試」格，若日曆有排，顯示 📅日期（最近一次） */
+  function decoHw() {
+    var root = document.getElementById('v84-hw'); if (!root) return;
+    var a = cal(), plan = {};
+    a.forEach(function (e) {
+      if (!linked(e)) return;
+      e.lessons.forEach(function (n) {
+        var k = LK[n] + '|' + e.cls + '|' + e.item;
+        (plan[k] = plan[k] || []).push(e.date);
+      });
+    });
+    root.querySelectorAll('button.v84-c:not(.done)').forEach(function (b) {
+      var x = (b.getAttribute('data-v84') || '').split('|');   /* C|課|班|項目|階段 */
+      if (x[4] !== '考試' || b.querySelector('.v99-plan')) return;
+      var ds = plan[x[1] + '|' + x[2] + '|' + x[3]]; if (!ds) return;
+      /* 優先顯示今天以後最近的一次；都已過去就顯示最後一次 */
+      ds.sort(); var t = today(), d = ds.filter(function (v) { return v >= t; })[0] || ds[ds.length - 1];
+      var s = document.createElement('span'); s.className = 'v99-plan'; s.textContent = '📅' + md(d);
+      b.appendChild(s); b.title += '（日曆排定 ' + md(d) + '）';
+    });
+  }
+
+  function deco() {
+    if (busy) return; busy = true;
+    try { decoCal(); decoHw(); } catch (e) {} finally { busy = false; }
+  }
+  var mo = new MutationObserver(function () { if (!busy) deco(); });
+  function watch() {
+    var p = document.getElementById('cls-panel'); if (p) mo.observe(p, { childList: true, subtree: true });
+    var m = document.getElementById('v98-cal');
+    if (m && !m.__v99) { m.__v99 = 1; mo.observe(m, { childList: true, subtree: true });
+      m.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-v99]'); if (b) { e.stopPropagation(); toggle(b.getAttribute('data-v99')); } }, true); }
+    deco();
+  }
+  /* 日曆視窗第一次開啟時才建立 → 包 open 接上監看 */
+  if (window.V98CAL) { var _o = V98CAL.open; V98CAL.open = function () { var r = _o.apply(this, arguments); watch(); return r; }; }
+  var btnHook = function () { var b = document.getElementById('v98-open'); if (b) b.onclick = function () { V98CAL.open(); }; watch(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', btnHook); else btnHook();
+
+  window.V99LINK = { isDone: isDone, linked: linked, toggle: toggle };
+})();
+</script>
+<script id="v99-ver-js">
+(function () {
+  window.APP_VERSION = 'V99';
+  function setVer() { var d = document.getElementById('v88-ver'); if (d) d.textContent = window.APP_VERSION; }
+  setVer(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setVer);
+})();
+</script>
 </body>
 </html>
